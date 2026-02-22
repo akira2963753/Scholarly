@@ -31,34 +31,44 @@ function normalizePosition(position: ScaledPosition, text: string): ScaledPositi
   const rawText = text.trim();
   if (!rawText) return position;
 
-  const widths = rects.map(r => r.x2 - r.x1);
-  let maxWidth = Infinity;
+  const pageWidth = boundingRect.width;
+  if (!pageWidth) return position;
 
-  if (rects.length > 1) {
-    const sorted = [...widths].sort((a, b) => a - b);
-    const median = sorted[Math.floor(sorted.length / 2)];
-    maxWidth = median * 1.5;
-  } else {
-    // Single line selection.
-    const H = rects[0].y2 - rects[0].y1;
-    // Count CJK vs English characters for width estimation
-    const cjkCount = (rawText.match(/[\u3000-\u9fff\uac00-\ud7a3\u0800-\u4e00]/g) || []).length;
-    const otherCount = rawText.length - cjkCount;
-
-    // Generous upper limit for text width: CJK=1.2x height, English=0.7x height, plus 3 chars padding
-    const safeTextWidth = (cjkCount * 1.2 + otherCount * 0.7 + 3) * H;
-
-    // If the box width is physically impossible for the text amount AND it spans >30% of the page
-    if (widths[0] > safeTextWidth && widths[0] > boundingRect.width * 0.3) {
-      maxWidth = safeTextWidth;
-    }
-  }
-
-  if (maxWidth === Infinity) return position;
+  // We divide the text length by the number of rects to roughly estimate 
+  // how many characters are in each highlighted box.
+  const charsPerRect = rawText.length / rects.length;
+  const cjkCount = (rawText.match(/[\u3000-\u9fff\uac00-\ud7a3\u0800-\u4e00]/g) || []).length / rects.length;
+  const otherCount = charsPerRect - cjkCount;
 
   const normalizedRects = rects.map(rect => {
-    const w = rect.x2 - rect.x1;
-    return w > maxWidth ? { ...rect, x2: rect.x1 + maxWidth } : rect;
+    const H = rect.y2 - rect.y1;
+    const W = rect.x2 - rect.x1;
+
+    // Generous upper limit for physical text width: 
+    // CJK characters ~1.4x height, English ~0.85x height, plus 6 chars padding
+    const expectedMaxWidth = (cjkCount * 1.4 + otherCount * 0.85 + 6) * H;
+
+    // Detection logic: If the box's physical width drastically exceeds the expected text width, 
+    // it means PDF.js has rendered a full-page width span for a short sentence.
+    // We use a 1.25x safe multiplier so we NEVER accidentally trigger on wide fonts.
+    if (W > expectedMaxWidth * 1.25 && W > pageWidth * 0.3) {
+
+      // If it starts in the left column and bleeds into the right half
+      if (rect.x1 < pageWidth * 0.48 && rect.x2 > pageWidth * 0.52) {
+        // Clamp to the center column boundary (49%), or 1.5x expected width if it's super short.
+        // This guarantees we never cut off actual text!
+        const safeClamp = Math.max(pageWidth * 0.49, rect.x1 + expectedMaxWidth * 1.5);
+        return { ...rect, x2: Math.min(rect.x2, safeClamp) };
+      }
+
+      // If it starts in the right column and bleeds off the page margin
+      if (rect.x1 > pageWidth * 0.5 && rect.x2 > pageWidth * 0.95) {
+        const safeClamp = Math.max(pageWidth * 0.96, rect.x1 + expectedMaxWidth * 1.5);
+        return { ...rect, x2: Math.min(rect.x2, safeClamp) };
+      }
+    }
+
+    return rect;
   });
 
   return {
