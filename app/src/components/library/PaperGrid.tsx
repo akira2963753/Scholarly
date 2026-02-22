@@ -58,13 +58,17 @@ export function PaperGrid() {
     return matchesSearch && matchesTags;
   });
 
-  const submitNewFolder = () => {
+  const submitNewFolder = async () => {
     if (newFolderName.trim()) {
-      addFolder({
-        id: crypto.randomUUID(),
-        name: newFolderName.trim(),
-        createdAt: new Date().toISOString(),
+      const res = await fetch("/api/folders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: newFolderName.trim() }),
       });
+      if (res.ok) {
+        const folder = await res.json();
+        addFolder(folder);
+      }
       setNewFolderName("");
       setIsCreatingFolder(false);
     }

@@ -57,7 +57,7 @@ export function PaperCard({ paper, index, viewMode = "grid" }: { paper: PaperDat
           <div style={{ display: "flex", gap: "8px", alignItems: "center", flexShrink: 0 }}>
             <select
               value={paper.folderId || ""}
-              onChange={(e) => updatePaper(paper.id, { folderId: e.target.value || undefined })}
+              onChange={(e) => updatePaper(paper.id, { folderId: e.target.value || null })}
               style={{ fontSize: "13px", padding: "4px 8px", borderRadius: "4px", border: "1px solid var(--border)", background: "var(--surface-2)", color: "var(--text-3)", outline: "none", cursor: "pointer", maxWidth: "110px", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
             >
               <option value="">No Folder</option>
@@ -102,7 +102,7 @@ export function PaperCard({ paper, index, viewMode = "grid" }: { paper: PaperDat
           <div style={{ display: "flex", gap: "8px", alignItems: "center", flexShrink: 0 }}>
             <select
               value={paper.folderId || ""}
-              onChange={(e) => updatePaper(paper.id, { folderId: e.target.value || undefined })}
+              onChange={(e) => updatePaper(paper.id, { folderId: e.target.value || null })}
               style={{
                 fontSize: "13px",
                 padding: "4px 8px",
