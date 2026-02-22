@@ -21,11 +21,54 @@ import { useEffect } from "react";
 /**
  * Fix for multi-column PDFs: PDF text layers often store lines as full-page-width
  * text items, causing highlights to bleed into the adjacent column.
- * We rely on the instant GhostHighlight swap to clean up the UI rather than
- * mutating layout coordinates, as naive clamping breaks 1-column papers.
+ * This algorithm calculates the maximum physical space the given text could reasonably
+ * occupy (distinguishing CJK vs English) and clamps the box width if it vastly exceeds it.
  */
-function normalizePosition(position: ScaledPosition): ScaledPosition {
-  return position;
+function normalizePosition(position: ScaledPosition, text: string): ScaledPosition {
+  const { rects, boundingRect } = position;
+  if (!rects || rects.length === 0 || !text) return position;
+
+  const rawText = text.trim();
+  if (!rawText) return position;
+
+  const widths = rects.map(r => r.x2 - r.x1);
+  let maxWidth = Infinity;
+
+  if (rects.length > 1) {
+    const sorted = [...widths].sort((a, b) => a - b);
+    const median = sorted[Math.floor(sorted.length / 2)];
+    maxWidth = median * 1.5;
+  } else {
+    // Single line selection.
+    const H = rects[0].y2 - rects[0].y1;
+    // Count CJK vs English characters for width estimation
+    const cjkCount = (rawText.match(/[\u3000-\u9fff\uac00-\ud7a3\u0800-\u4e00]/g) || []).length;
+    const otherCount = rawText.length - cjkCount;
+
+    // Generous upper limit for text width: CJK=1.2x height, English=0.7x height, plus 3 chars padding
+    const safeTextWidth = (cjkCount * 1.2 + otherCount * 0.7 + 3) * H;
+
+    // If the box width is physically impossible for the text amount AND it spans >30% of the page
+    if (widths[0] > safeTextWidth && widths[0] > boundingRect.width * 0.3) {
+      maxWidth = safeTextWidth;
+    }
+  }
+
+  if (maxWidth === Infinity) return position;
+
+  const normalizedRects = rects.map(rect => {
+    const w = rect.x2 - rect.x1;
+    return w > maxWidth ? { ...rect, x2: rect.x1 + maxWidth } : rect;
+  });
+
+  return {
+    ...position,
+    rects: normalizedRects,
+    boundingRect: {
+      ...boundingRect,
+      x2: Math.max(...normalizedRects.map((r) => r.x2)),
+    },
+  };
 }
 
 export function SelectionTooltip() {
@@ -53,7 +96,7 @@ export function SelectionTooltip() {
       id: crypto.randomUUID(),
       color,
       selectedText: sel.content?.text?.trim() || "",
-      position: normalizePosition(sel.position),
+      position: normalizePosition(sel.position, sel.content?.text || ""),
       paperId,
       createdAt: new Date().toISOString(),
     };
