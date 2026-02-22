@@ -12,20 +12,30 @@ const COLORS: { color: HighlightColor; label: string; bg: string; border: string
   { color: "blue", label: "Reference", bg: "#C0D7EB80", border: "#C0D7EB" },
 ];
 
+import { useEffect } from "react";
+
+/**
+ * Fix for multi-column PDFs: PDF text layers often store lines as full-page-width
+ * text items, causing highlights to bleed into the adjacent column.
+ */
+/**
+ * Fix for multi-column PDFs: PDF text layers often store lines as full-page-width
+ * text items, causing highlights to bleed into the adjacent column.
+ * We rely on the instant GhostHighlight swap to clean up the UI rather than
+ * mutating layout coordinates, as naive clamping breaks 1-column papers.
+ */
 function normalizePosition(position: ScaledPosition): ScaledPosition {
   return position;
 }
 
-import { useEffect } from "react";
-
 export function SelectionTooltip() {
-  const { getCurrentSelection, removeGhostHighlight } = usePdfHighlighterContext();
+  const context = usePdfHighlighterContext();
+  const { getCurrentSelection, removeGhostHighlight } = context;
   const { paperId, addHighlight, addNote } = useWorkspaceStore();
 
-  // As soon as the tooltip renders (which means the user finished dragging),
-  // convert the native browser text selection into a GhostHighlight.
-  // This clears the ugly native `::selection` (which bleeds into trailing spaces)
-  // and replaces it with our clean HighlightContainer UI.
+  // As soon as the tooltip renders, convert the native selection into a GhostHighlight.
+  // This removes the browser's native `::selection` (which draws ugly trailing boxes)
+  // and gives us a clean HighlightContainer UI managed by React.
   useEffect(() => {
     const sel = getCurrentSelection();
     if (sel && "makeGhostHighlight" in sel && typeof sel.makeGhostHighlight === "function") {
@@ -34,7 +44,10 @@ export function SelectionTooltip() {
   }, [getCurrentSelection]);
 
   const makeHighlight = (color: HighlightColor): PaperHighlight | null => {
-    const sel = getCurrentSelection();
+    // Because we called makeGhostHighlight() above, getCurrentSelection() might be null.
+    // We fall back to the ghost highlight's coordinates.
+    const sel = getCurrentSelection() || (context as any).getGhostHighlight?.();
+
     if (!sel || !paperId) return null;
     return {
       id: crypto.randomUUID(),
