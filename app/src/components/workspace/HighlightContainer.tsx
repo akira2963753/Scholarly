@@ -7,7 +7,6 @@ import {
   MonitoredHighlightContainer,
 } from "react-pdf-highlighter-extended";
 import { HighlightEditMenu } from "./HighlightEditMenu";
-import { normalizePosition } from "@/lib/normalizePosition";
 import type { PaperHighlight, HighlightColor } from "@/types/highlight";
 
 const COLOR_MAP: Record<HighlightColor, string> = {
@@ -39,12 +38,6 @@ export function HighlightContainer() {
 
   const isGhost = highlight.id === GHOST_ID;
 
-  // For ghost highlights: normalize position to clamp column bleed
-  const ghostText = isGhost ? ((highlight as any).content?.text ?? "") : "";
-  const displayHighlight = isGhost
-    ? { ...highlight, position: normalizePosition(highlight.position, ghostText) }
-    : highlight;
-
   // Ghost → neutral selection-blue; permanent → chosen colour
   const color = highlight.color ?? "yellow";
   const bg = isGhost ? "rgba(66, 153, 225, 0.28)" : COLOR_MAP[color];
@@ -62,7 +55,7 @@ export function HighlightContainer() {
   return (
     <MonitoredHighlightContainer onMouseEnter={() => {}}>
       <TextHighlight
-        highlight={displayHighlight}
+        highlight={highlight}
         isScrolledTo={isScrolledTo}
         onClick={handleClick}
         style={{
