@@ -1,6 +1,7 @@
 "use client";
 
 import { usePdfHighlighterContext } from "react-pdf-highlighter-extended";
+import type { ScaledPosition } from "react-pdf-highlighter-extended";
 import { useWorkspaceStore } from "@/stores/useWorkspaceStore";
 import type { PaperHighlight, HighlightColor } from "@/types/highlight";
 import type { PaperNote } from "@/types/note";
@@ -11,32 +12,44 @@ const COLORS: { color: HighlightColor; label: string; bg: string; border: string
   { color: "blue", label: "Reference", bg: "#C0D7EB80", border: "#C0D7EB" },
 ];
 
-import type { ScaledPosition } from "react-pdf-highlighter-extended";
-
 /**
- * Fix for multi-column PDFs: some PDF text layers store lines as full-page-width
+ * Fix for multi-column PDFs: PDF text layers often store lines as full-page-width
  * text items, causing highlights to bleed into the adjacent column.
- * We detect oversized rects (wider than 1.5× the median rect width) and clip them.
+ *
+ * Strategy: any rect whose width exceeds 55% of the page width is treated as a
+ * "column-bleed" rect and clipped. The clipped width uses the narrowest
+ * non-oversized rect as reference; falls back to 48% of the page width.
  */
 function normalizePosition(position: ScaledPosition): ScaledPosition {
-  const { rects } = position;
-  if (rects.length <= 1) return position;
+  const { rects, boundingRect } = position;
+  if (rects.length === 0) return position;
 
-  const widths = rects.map((r) => r.x2 - r.x1);
-  const sorted = [...widths].sort((a, b) => a - b);
-  const median = sorted[Math.floor(sorted.length / 2)];
-  const maxWidth = median * 1.5;
+  // `boundingRect.width` and `.height` are the PDF page's pixel dimensions
+  const pageWidth = boundingRect.width;
+  if (!pageWidth) return position;
+
+  const COLUMN_THRESHOLD = pageWidth * 0.55; // wider than this → spanning columns
+
+  const oversized = rects.filter((r) => r.x2 - r.x1 > COLUMN_THRESHOLD);
+  if (oversized.length === 0) return position; // nothing to clip
+
+  // Use narrowest rect as the expected column width; fallback to 48% of page
+  const narrow = rects.filter((r) => r.x2 - r.x1 <= COLUMN_THRESHOLD);
+  const columnWidth =
+    narrow.length > 0
+      ? Math.max(...narrow.map((r) => r.x2 - r.x1))
+      : pageWidth * 0.48;
 
   const normalizedRects = rects.map((rect) => {
     const w = rect.x2 - rect.x1;
-    return w > maxWidth ? { ...rect, x2: rect.x1 + maxWidth } : rect;
+    return w > COLUMN_THRESHOLD ? { ...rect, x2: rect.x1 + columnWidth } : rect;
   });
 
   return {
     ...position,
     rects: normalizedRects,
     boundingRect: {
-      ...position.boundingRect,
+      ...boundingRect,
       x2: Math.max(...normalizedRects.map((r) => r.x2)),
     },
   };
