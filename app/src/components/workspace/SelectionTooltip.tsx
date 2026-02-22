@@ -12,47 +12,8 @@ const COLORS: { color: HighlightColor; label: string; bg: string; border: string
   { color: "blue", label: "Reference", bg: "#C0D7EB80", border: "#C0D7EB" },
 ];
 
-/**
- * Fix for multi-column PDFs: PDF text layers often store lines as full-page-width
- * text items, causing highlights to bleed into the adjacent column.
- *
- * Strategy: any rect whose width exceeds 55% of the page width is treated as a
- * "column-bleed" rect and clipped. The clipped width uses the narrowest
- * non-oversized rect as reference; falls back to 48% of the page width.
- */
 function normalizePosition(position: ScaledPosition): ScaledPosition {
-  const { rects, boundingRect } = position;
-  if (rects.length === 0) return position;
-
-  // `boundingRect.width` and `.height` are the PDF page's pixel dimensions
-  const pageWidth = boundingRect.width;
-  if (!pageWidth) return position;
-
-  const COLUMN_THRESHOLD = pageWidth * 0.55; // wider than this → spanning columns
-
-  const oversized = rects.filter((r) => r.x2 - r.x1 > COLUMN_THRESHOLD);
-  if (oversized.length === 0) return position; // nothing to clip
-
-  // Use narrowest rect as the expected column width; fallback to 48% of page
-  const narrow = rects.filter((r) => r.x2 - r.x1 <= COLUMN_THRESHOLD);
-  const columnWidth =
-    narrow.length > 0
-      ? Math.max(...narrow.map((r) => r.x2 - r.x1))
-      : pageWidth * 0.48;
-
-  const normalizedRects = rects.map((rect) => {
-    const w = rect.x2 - rect.x1;
-    return w > COLUMN_THRESHOLD ? { ...rect, x2: rect.x1 + columnWidth } : rect;
-  });
-
-  return {
-    ...position,
-    rects: normalizedRects,
-    boundingRect: {
-      ...boundingRect,
-      x2: Math.max(...normalizedRects.map((r) => r.x2)),
-    },
-  };
+  return position;
 }
 
 export function SelectionTooltip() {
