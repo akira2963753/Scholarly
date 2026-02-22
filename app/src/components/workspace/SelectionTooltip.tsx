@@ -16,9 +16,22 @@ function normalizePosition(position: ScaledPosition): ScaledPosition {
   return position;
 }
 
+import { useEffect } from "react";
+
 export function SelectionTooltip() {
   const { getCurrentSelection, removeGhostHighlight } = usePdfHighlighterContext();
   const { paperId, addHighlight, addNote } = useWorkspaceStore();
+
+  // As soon as the tooltip renders (which means the user finished dragging),
+  // convert the native browser text selection into a GhostHighlight.
+  // This clears the ugly native `::selection` (which bleeds into trailing spaces)
+  // and replaces it with our clean HighlightContainer UI.
+  useEffect(() => {
+    const sel = getCurrentSelection();
+    if (sel && "makeGhostHighlight" in sel && typeof sel.makeGhostHighlight === "function") {
+      sel.makeGhostHighlight();
+    }
+  }, [getCurrentSelection]);
 
   const makeHighlight = (color: HighlightColor): PaperHighlight | null => {
     const sel = getCurrentSelection();
