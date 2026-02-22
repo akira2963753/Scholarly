@@ -11,6 +11,37 @@ const COLORS: { color: HighlightColor; label: string; bg: string; border: string
   { color: "blue", label: "Reference", bg: "#C0D7EB80", border: "#C0D7EB" },
 ];
 
+import type { ScaledPosition } from "react-pdf-highlighter-extended";
+
+/**
+ * Fix for multi-column PDFs: some PDF text layers store lines as full-page-width
+ * text items, causing highlights to bleed into the adjacent column.
+ * We detect oversized rects (wider than 1.5× the median rect width) and clip them.
+ */
+function normalizePosition(position: ScaledPosition): ScaledPosition {
+  const { rects } = position;
+  if (rects.length <= 1) return position;
+
+  const widths = rects.map((r) => r.x2 - r.x1);
+  const sorted = [...widths].sort((a, b) => a - b);
+  const median = sorted[Math.floor(sorted.length / 2)];
+  const maxWidth = median * 1.5;
+
+  const normalizedRects = rects.map((rect) => {
+    const w = rect.x2 - rect.x1;
+    return w > maxWidth ? { ...rect, x2: rect.x1 + maxWidth } : rect;
+  });
+
+  return {
+    ...position,
+    rects: normalizedRects,
+    boundingRect: {
+      ...position.boundingRect,
+      x2: Math.max(...normalizedRects.map((r) => r.x2)),
+    },
+  };
+}
+
 export function SelectionTooltip() {
   const { getCurrentSelection, removeGhostHighlight } = usePdfHighlighterContext();
   const { paperId, addHighlight, addNote } = useWorkspaceStore();
@@ -22,7 +53,7 @@ export function SelectionTooltip() {
       id: crypto.randomUUID(),
       color,
       selectedText: sel.content?.text?.trim() || "",
-      position: sel.position,
+      position: normalizePosition(sel.position),
       paperId,
       createdAt: new Date().toISOString(),
     };

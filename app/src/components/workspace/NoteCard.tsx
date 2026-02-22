@@ -101,7 +101,7 @@ export function NoteCard({ note, highlight }: Props) {
               </span>
             )}
           </div>
-          <p style={{ margin: 0, lineHeight: 1.65, fontSize: "14.5px" }}>
+          <p style={{ margin: 0, lineHeight: 1.65, fontSize: "17.5px", fontFamily: "var(--font-ui-zh, 'Noto Serif TC'), 'EB Garamond', Georgia, serif", fontWeight: 700 }}>
             "{quotedText}"
           </p>
         </div>
@@ -118,9 +118,10 @@ export function NoteCard({ note, highlight }: Props) {
             width: "100%",
             minHeight: "72px",
             padding: "8px 10px",
-            fontSize: "13.5px",
+            fontSize: "16.5px",
             lineHeight: 1.6,
-            fontFamily: "var(--font-content, 'EB Garamond', 'Noto Serif TC', Georgia, serif)",
+            fontFamily: "var(--font-ui-zh, 'Noto Serif TC'), 'EB Garamond', Georgia, serif",
+            fontWeight: 700,
             border: "1px solid transparent",
             borderRadius: "var(--radius-sm)",
             background: "transparent",
