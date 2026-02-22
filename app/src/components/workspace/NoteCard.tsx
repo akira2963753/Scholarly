@@ -44,6 +44,7 @@ export function NoteCard({ note, highlight }: Props) {
     yellow: "var(--hl-yellow-solid)",
     red: "var(--hl-red-solid)",
     blue: "var(--hl-blue-solid)",
+    green: "var(--hl-green-solid)",
   };
 
   return (

@@ -10,15 +10,17 @@ import { HighlightEditMenu } from "./HighlightEditMenu";
 import type { PaperHighlight, HighlightColor } from "@/types/highlight";
 
 const COLOR_MAP: Record<HighlightColor, string> = {
-  yellow: "rgba(252, 196, 25, 0.22)",
-  red:    "rgba(225, 80, 80, 0.18)",
-  blue:   "rgba(66, 153, 225, 0.22)",
+  yellow: "rgba(235, 219, 164, 0.5)",
+  red: "rgba(235, 161, 136, 0.5)",
+  blue: "rgba(192, 215, 235, 0.5)",
+  green: "rgba(235, 234, 191, 0.5)",
 };
 
 const BORDER_MAP: Record<HighlightColor, string> = {
-  yellow: "rgba(245, 159, 0, 0.6)",
-  red:    "rgba(224, 49, 49, 0.55)",
-  blue:   "rgba(25, 113, 194, 0.55)",
+  yellow: "#EBDBA4",
+  red: "#EBA188",
+  blue: "#C0D7EB",
+  green: "#EBEABF",
 };
 
 /**
@@ -41,19 +43,20 @@ export function HighlightContainer() {
   };
 
   return (
-    <MonitoredHighlightContainer onMouseEnter={() => {}}>
+    <MonitoredHighlightContainer onMouseEnter={() => { }}>
       <TextHighlight
         highlight={highlight}
         isScrolledTo={isScrolledTo}
         onClick={handleClick}
         style={{
           background: bg,
-          mixBlendMode: "multiply",
           outline: isScrolledTo ? `2px solid ${border}` : "none",
           outlineOffset: "1px",
           borderRadius: "2px",
           cursor: "pointer",
           transition: "outline 0.2s ease",
+          transform: "scaleY(0.85)",
+          transformOrigin: "bottom",
         }}
       />
     </MonitoredHighlightContainer>

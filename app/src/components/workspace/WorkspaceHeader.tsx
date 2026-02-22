@@ -7,6 +7,7 @@ const LEGEND = [
   { color: "var(--hl-yellow-solid)", label: "Key Point" },
   { color: "var(--hl-red-solid)", label: "Question" },
   { color: "var(--hl-blue-solid)", label: "Reference" },
+  { color: "var(--hl-green-solid)", label: "Note" },
 ];
 
 export function WorkspaceHeader({ paper }: { paper: Paper }) {

@@ -3,16 +3,20 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useLibraryStore } from "@/stores/useLibraryStore";
+import { useAnnotationStore, EMPTY_HIGHLIGHTS, EMPTY_NOTES } from "@/stores/useAnnotationStore";
 import { WorkspaceClient } from "./WorkspaceClient";
 
 export function WorkspaceClientPage({ paperId }: { paperId: string }) {
   const router = useRouter();
   const paper = useLibraryStore((s) => s.papers.find((p) => p.id === paperId));
 
+  // Direct selectors using stable empty-array fallbacks so Zustand's
+  // Object.is comparison never triggers an infinite re-render loop.
+  const highlights = useAnnotationStore((s) => s.byPaper[paperId]?.highlights ?? EMPTY_HIGHLIGHTS);
+  const notes = useAnnotationStore((s) => s.byPaper[paperId]?.notes ?? EMPTY_NOTES);
+
   useEffect(() => {
     if (paper === undefined) {
-      // Paper not in store → go back to library
-      // (give store a moment to hydrate from localStorage first)
       const timer = setTimeout(() => {
         if (!useLibraryStore.getState().papers.find((p) => p.id === paperId)) {
           router.replace("/");
@@ -39,5 +43,5 @@ export function WorkspaceClientPage({ paperId }: { paperId: string }) {
     );
   }
 
-  return <WorkspaceClient paper={paper} highlights={[]} notes={[]} />;
+  return <WorkspaceClient paper={paper} highlights={highlights} notes={notes} />;
 }

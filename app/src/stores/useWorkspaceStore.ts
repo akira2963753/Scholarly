@@ -4,6 +4,7 @@ import { create } from "zustand";
 import type { PaperHighlight } from "@/types/highlight";
 import type { PaperNote } from "@/types/note";
 import type { PdfHighlighterUtils } from "react-pdf-highlighter-extended";
+import { useAnnotationStore } from "./useAnnotationStore";
 
 interface WorkspaceStore {
   paperId: string | null;
@@ -50,41 +51,60 @@ export const useWorkspaceStore = create<WorkspaceStore>()((set, get) => ({
 
   setPdfUtils: (utils) => set({ pdfUtils: utils }),
 
-  addHighlight: (highlight) =>
-    set((state) => ({ highlights: [...state.highlights, highlight] })),
+  // ── Write-through: update runtime state + persist to annotation store ────
 
-  deleteHighlight: (id) =>
+  addHighlight: (highlight) => {
+    useAnnotationStore.getState().addHighlight(highlight);
+    set((state) => ({ highlights: [...state.highlights, highlight] }));
+  },
+
+  deleteHighlight: (id) => {
+    const { paperId } = get();
+    if (paperId) useAnnotationStore.getState().deleteHighlight(paperId, id);
     set((state) => ({
       highlights: state.highlights.filter((h) => h.id !== id),
       notes: state.notes.filter((n) => n.highlightId !== id),
-    })),
+    }));
+  },
 
-  updateHighlightColor: (id, color) =>
+  updateHighlightColor: (id, color) => {
+    const { paperId } = get();
+    if (paperId) useAnnotationStore.getState().updateHighlightColor(paperId, id, color);
     set((state) => ({
       highlights: state.highlights.map((h) => h.id === id ? { ...h, color } : h),
-    })),
+    }));
+  },
 
-  addNote: (note) =>
-    set((state) => ({ notes: [...state.notes, note] })),
+  addNote: (note) => {
+    useAnnotationStore.getState().addNote(note);
+    set((state) => ({ notes: [...state.notes, note] }));
+  },
 
-  updateNoteContent: (noteId, content) =>
+  updateNoteContent: (noteId, content) => {
+    const { paperId } = get();
+    if (paperId) useAnnotationStore.getState().updateNoteContent(paperId, noteId, content);
     set((state) => ({
       notes: state.notes.map((n) =>
         n.id === noteId
           ? {
-              ...n,
-              updatedAt: new Date().toISOString(),
-              blocks: n.blocks.map((b) =>
-                b.data.type === "text" ? { ...b, data: { type: "text", content } } : b
-              ),
-            }
+            ...n,
+            updatedAt: new Date().toISOString(),
+            blocks: n.blocks.map((b) =>
+              b.data.type === "text" ? { ...b, data: { type: "text" as const, content } } : b
+            ),
+          }
           : n
       ),
-    })),
+    }));
+  },
 
-  deleteNote: (id) =>
-    set((state) => ({ notes: state.notes.filter((n) => n.id !== id) })),
+  deleteNote: (id) => {
+    const { paperId } = get();
+    if (paperId) useAnnotationStore.getState().deleteNote(paperId, id);
+    set((state) => ({ notes: state.notes.filter((n) => n.id !== id) }));
+  },
 
+  // ── Navigation helpers ───────────────────────────────────
   scrollToPdfHighlight: (highlight) => {
     const { pdfUtils } = get();
     if (!pdfUtils) return;

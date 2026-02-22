@@ -40,7 +40,7 @@ export function NotesPanel() {
         {notes.length > 0 && (
           <span
             className="badge"
-            style={{ background: "var(--surface-3)", color: "var(--text-2)", marginLeft: "auto" }}
+            style={{ background: "var(--surface-3)", color: "var(--text-2)" }}
           >
             {notes.length}
           </span>

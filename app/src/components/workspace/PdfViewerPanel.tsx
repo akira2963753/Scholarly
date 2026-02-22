@@ -1,35 +1,28 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useMemo } from "react";
+
 import {
   PdfLoader,
-  PdfHighlighter,
-  type PdfHighlighterUtils,
 } from "react-pdf-highlighter-extended";
-import { useWorkspaceStore } from "@/stores/useWorkspaceStore";
-import { SelectionTooltip } from "./SelectionTooltip";
-import { HighlightContainer } from "./HighlightContainer";
+import { PdfHighlighterView } from "./PdfHighlighterView";
+import { PdfZoomToolbar } from "./PdfZoomToolbar";
 
 interface Props {
   pdfUrl: string;
 }
 
 export function PdfViewerPanel({ pdfUrl }: Props) {
-  const highlights = useWorkspaceStore((s) => s.highlights);
-  const setPdfUtils = useWorkspaceStore((s) => s.setPdfUtils);
-  const utilsRef = useRef<PdfHighlighterUtils | null>(null);
-
-  // Keep a stable reference to the utilsRef callback
-  const handleUtilsRef = (utils: PdfHighlighterUtils) => {
-    utilsRef.current = utils;
-    setPdfUtils(utils);
-  };
-
+  // Memoize the document object so PdfLoader's internal useEffect([document])
+  // sees a stable reference even when parent components re-render.
+  // Without this, adding a highlight causes WorkspaceClient to re-render,
+  // PdfViewerPanel to re-render, and PdfLoader to reload the PDF → scroll reset.
+  const pdfDocument = useMemo(() => ({ url: pdfUrl }), [pdfUrl]);
   return (
     <div style={{ height: "100%", display: "flex", flexDirection: "column" }}>
       <PdfLoader
-        document={pdfUrl}
-        workerSrc="/pdf.worker-wrapper.mjs"
+        document={pdfDocument}
+        workerSrc="/pdf.worker.min.mjs"
         beforeLoad={(progress) => {
           const isParsing = progress.total > 0 && progress.loaded >= progress.total;
           const pct = progress.total > 0
@@ -48,7 +41,6 @@ export function PdfViewerPanel({ pdfUrl }: Props) {
               }}
             >
               {isParsing ? (
-                /* Spinner shown while PDF.js parses the document */
                 <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="1.5"
                   style={{ animation: "spin 1s linear infinite" }}>
                   <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
@@ -101,17 +93,10 @@ export function PdfViewerPanel({ pdfUrl }: Props) {
         )}
       >
         {(pdfDocument) => (
-          <PdfHighlighter
-            pdfDocument={pdfDocument}
-            highlights={highlights}
-            utilsRef={handleUtilsRef}
-            selectionTip={<SelectionTooltip />}
-            pdfScaleValue="page-width"
-            style={{ height: "100%", background: "var(--surface-2)" }}
-            textSelectionColor="rgba(47, 109, 224, 0.15)"
-          >
-            <HighlightContainer />
-          </PdfHighlighter>
+          <div style={{ position: "relative", height: "100%", overflow: "hidden" }}>
+            <PdfHighlighterView pdfDocument={pdfDocument} />
+            <PdfZoomToolbar />
+          </div>
         )}
       </PdfLoader>
     </div>

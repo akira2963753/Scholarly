@@ -18,9 +18,10 @@
   --hl-yellow: rgba(252, 196, 25, 0.38);
   --hl-red: rgba(230, 80, 80, 0.30);
   --hl-blue: rgba(66, 153, 225, 0.32);
-  --hl-yellow-solid: #f59f00;
-  --hl-red-solid: #e03131;
-  --hl-blue-solid: #1971c2;
+  --hl-yellow-solid: #EBDBA4;
+  --hl-red-solid: #EBA188;
+  --hl-blue-solid: #C0D7EB;
+  --hl-green-solid: #EBEABF;
 
   --radius-sm: 4px;
   --radius-md: 6px;
@@ -28,15 +29,25 @@
 }
 
 /* ─── Base ───────────────────────────────────────────────── */
-*, *::before, *::after { box-sizing: border-box; }
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
 
-html, body { height: 100%; margin: 0; padding: 0; }
+html,
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
 
 body {
   background: var(--surface);
   color: var(--text-1);
-  font-family: var(--font-ui, 'Noto Sans TC', system-ui, sans-serif);
-  font-size: 14px;
+  font-family: var(--font-ui-en, 'EB Garamond'), var(--font-ui-zh, 'Noto Serif TC'), Georgia, serif;
+  font-weight: 600;
+  font-size: 16px;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
 }
@@ -49,6 +60,7 @@ body {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.03);
   transition: box-shadow 0.15s ease, border-color 0.15s ease;
 }
+
 .card:hover {
   border-color: var(--border-strong);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
@@ -68,18 +80,28 @@ body {
   white-space: nowrap;
   font-family: inherit;
 }
+
 .btn-primary {
   background: var(--text-1);
   color: #fff;
   border-color: var(--text-1);
 }
-.btn-primary:hover { background: #333; border-color: #333; }
+
+.btn-primary:hover {
+  background: #333;
+  border-color: #333;
+}
+
 .btn-ghost {
   background: transparent;
   color: var(--text-2);
   border-color: var(--border);
 }
-.btn-ghost:hover { background: var(--surface-3); color: var(--text-1); }
+
+.btn-ghost:hover {
+  background: var(--surface-3);
+  color: var(--text-1);
+}
 
 /* Notion-style Quote Block */
 .quote-block {
@@ -95,6 +117,7 @@ body {
   cursor: pointer;
   transition: background 0.15s ease, border-color 0.15s ease;
 }
+
 .quote-block:hover {
   background: rgba(235, 234, 230, 0.9);
   border-left-color: var(--accent);
@@ -124,8 +147,14 @@ body {
   outline: none;
   transition: border-color 0.15s ease;
 }
-.input:focus { border-color: var(--accent); }
-.input::placeholder { color: var(--text-3); }
+
+.input:focus {
+  border-color: var(--accent);
+}
+
+.input::placeholder {
+  color: var(--text-3);
+}
 
 /* Badge */
 .badge {
@@ -150,6 +179,7 @@ body {
   z-index: 50;
   animation: fadeIn 0.12s ease;
 }
+
 .modal-box {
   background: var(--surface);
   border-radius: var(--radius-lg);
@@ -162,20 +192,71 @@ body {
 }
 
 /* Scrollbar */
-::-webkit-scrollbar { width: 5px; height: 5px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: var(--text-3); }
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-3);
+}
 
 /* Animations */
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-@keyframes slideUp {
-  from { opacity: 0; transform: translateY(8px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
 
-/* PDF viewer overrides */
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* PDF viewer overrides — hide scrollbar track, keep scroll functionality */
 .PdfHighlighter {
   overflow: auto !important;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.PdfHighlighter::-webkit-scrollbar {
+  display: none;
+}
+
+/* Allotment split-pane — thin draggable sash, no visible track */
+.workspace-split {
+  --sash-size: 4px;
+  --sash-hover-size: 1px;
+  --focus-border: var(--border);
 }

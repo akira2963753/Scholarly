@@ -12,12 +12,14 @@ const AllotmentLayout = dynamic(
 interface Props {
   left: ReactNode;
   right: ReactNode;
+  notesOpen: boolean;
+  onOpenNotes: () => void;
 }
 
-export function ResizableSplitPane({ left, right }: Props) {
+export function ResizableSplitPane({ left, right, notesOpen, onOpenNotes }: Props) {
   return (
     <div style={{ height: "100%", overflow: "hidden" }}>
-      <AllotmentLayout left={left} right={right} />
+      <AllotmentLayout left={left} right={right} notesOpen={notesOpen} onOpenNotes={onOpenNotes} />
     </div>
   );
 }

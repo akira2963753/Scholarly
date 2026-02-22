@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useWorkspaceStore } from "@/stores/useWorkspaceStore";
 import { ResizableSplitPane } from "./ResizableSplitPane";
 import { WorkspaceHeader } from "./WorkspaceHeader";
 import { PdfViewerPanel } from "./PdfViewerPanel";
-import { NotesPanel } from "./NotesPanel";
+import { RightPanel } from "./RightPanel";
 import type { Paper } from "@/types/paper";
 import type { PaperHighlight } from "@/types/highlight";
 import type { PaperNote } from "@/types/note";
@@ -18,6 +18,7 @@ interface Props {
 
 export function WorkspaceClient({ paper, highlights, notes }: Props) {
   const initWorkspace = useWorkspaceStore((s) => s.initWorkspace);
+  const [notesOpen, setNotesOpen] = useState(true);
 
   // Initialise workspace state when paper changes
   useEffect(() => {
@@ -30,7 +31,9 @@ export function WorkspaceClient({ paper, highlights, notes }: Props) {
       <div style={{ flex: 1, overflow: "hidden" }}>
         <ResizableSplitPane
           left={<PdfViewerPanel pdfUrl={paper.filePath} />}
-          right={<NotesPanel />}
+          right={<RightPanel paper={paper} onCollapse={() => setNotesOpen(false)} />}
+          notesOpen={notesOpen}
+          onOpenNotes={() => setNotesOpen(true)}
         />
       </div>
     </div>

@@ -6,9 +6,9 @@ import type { PaperHighlight, HighlightColor } from "@/types/highlight";
 import type { PaperNote } from "@/types/note";
 
 const COLORS: { color: HighlightColor; label: string; bg: string; border: string }[] = [
-  { color: "yellow", label: "Key Point",   bg: "rgba(252,196,25,0.5)",  border: "#f59f00" },
-  { color: "red",    label: "Question",    bg: "rgba(230,80,80,0.45)",  border: "#e03131" },
-  { color: "blue",   label: "Reference",  bg: "rgba(66,153,225,0.45)", border: "#1971c2" },
+  { color: "yellow", label: "Key Point", bg: "#EBDBA480", border: "#EBDBA4" },
+  { color: "red", label: "Question", bg: "#EBA18880", border: "#EBA188" },
+  { color: "blue", label: "Reference", bg: "#C0D7EB80", border: "#C0D7EB" },
 ];
 
 export function SelectionTooltip() {
@@ -36,7 +36,7 @@ export function SelectionTooltip() {
   };
 
   const handleAddNote = () => {
-    const highlight = makeHighlight("yellow");
+    const highlight = makeHighlight("green");
     if (!highlight) return;
     addHighlight(highlight);
     removeGhostHighlight();

@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback } from "react";
 import { useLibraryStore } from "@/stores/useLibraryStore";
-import type { Paper } from "@/types/paper";
+import type { PaperData } from "@/stores/useLibraryStore";
+import { useSettingsStore } from "@/stores/useSettingsStore";
 
 interface FormData {
   title: string;
@@ -10,29 +11,55 @@ interface FormData {
   school: string;
   year: string;
   venue: string;
+  folderId: string;
 }
 
 interface Props {
   onClose: () => void;
   mode?: "add" | "edit";
-  initialPaper?: Paper;
+  initialPaper?: PaperData;
+  initialFolderId?: string;
 }
 
-export function UploadModal({ onClose, mode = "add", initialPaper }: Props) {
+export function UploadModal({ onClose, mode = "add", initialPaper, initialFolderId }: Props) {
   const isEdit = mode === "edit";
-  const { addPaper, updatePaper, removePaper } = useLibraryStore();
+  const { addPaper, updatePaper, removePaper, folders } = useLibraryStore();
+  const geminiApiKey = useSettingsStore((s) => s.geminiApiKey);
   const fileRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
   const [dragging, setDragging] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [aiExtracting, setAiExtracting] = useState(false);
   const [form, setForm] = useState<FormData>({
     title: initialPaper?.title ?? "",
     author: initialPaper?.author ?? "",
     school: initialPaper?.school ?? "",
     year: initialPaper?.year?.toString() ?? new Date().getFullYear().toString(),
     venue: initialPaper?.venue ?? "",
+    folderId: initialPaper?.folderId ?? initialFolderId ?? "",
   });
   const [errors, setErrors] = useState<Partial<FormData & { file: string }>>({});
+  const [tags, setTags] = useState<string[]>(initialPaper?.tags ?? []);
+  const [tagInput, setTagInput] = useState("");
+
+  const addTag = useCallback((raw: string) => {
+    const trimmed = raw.trim().toLowerCase();
+    if (trimmed && !tags.includes(trimmed)) {
+      setTags((prev) => [...prev, trimmed]);
+    }
+    setTagInput("");
+  }, [tags]);
+
+  const removeTag = (tag: string) => setTags((prev) => prev.filter((t) => t !== tag));
+
+  const handleTagKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" || e.key === "," || e.key === "Tab") {
+      e.preventDefault();
+      addTag(tagInput);
+    } else if (e.key === "Backspace" && !tagInput && tags.length > 0) {
+      setTags((prev) => prev.slice(0, -1));
+    }
+  };
 
   const validate = () => {
     const e: Partial<FormData & { file: string }> = {};
@@ -65,6 +92,107 @@ export function UploadModal({ onClose, mode = "add", initialPaper }: Props) {
     if (f) handleFile(f);
   };
 
+  const extractMetadataWithAI = async () => {
+    if (!file) return;
+    if (!geminiApiKey) {
+      setErrors((prev) => ({ ...prev, file: "Please configure Gemini API Key in Settings first." }));
+      return;
+    }
+
+    if (file.size > 15 * 1024 * 1024) {
+      setErrors((prev) => ({ ...prev, file: "File is too large for AI extraction (limit 15MB)." }));
+      return;
+    }
+
+    setAiExtracting(true);
+    setErrors((prev) => ({ ...prev, file: undefined }));
+
+    try {
+      // Convert File to Base64 manually, as FileReader is reliable in browser
+      const base64String = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          if (typeof reader.result === "string") {
+            const b64 = reader.result.split(",")[1];
+            resolve(b64);
+          } else {
+            reject(new Error("Failed to read file"));
+          }
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+
+      const systemPrompt = `You are a helpful academic librarian. Extract metadata from the provided academic paper (PDF).
+Please return ONLY a valid JSON object with the following keys. If a value is not found or unclear, use an empty string or the most reasonable guess.
+{
+  "title": "Title of the paper",
+  "author": "List of authors, separated by commas",
+  "year": "Publication year as a string (e.g., '2023')",
+  "venue": "Publication venue, journal, or conference",
+  "school": "Institution or university of the authors (optional, can be empty)"
+}`;
+
+      const apiContents = [
+        {
+          role: "user",
+          parts: [
+            { text: "Extract metadata from this paper:" },
+            {
+              inlineData: {
+                mimeType: "application/pdf",
+                data: base64String,
+              },
+            },
+          ],
+        },
+      ];
+
+      const res = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiApiKey}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            systemInstruction: { parts: [{ text: systemPrompt }] },
+            contents: apiContents,
+            generationConfig: {
+              responseMimeType: "application/json",
+            },
+          }),
+        }
+      );
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data?.error?.message || "API request failed");
+      }
+
+      const textReply = data.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (!textReply) throw new Error("No response from AI");
+
+      try {
+        const parsed = JSON.parse(textReply);
+        setForm((prev) => ({
+          ...prev,
+          title: parsed.title || prev.title,
+          author: parsed.author || prev.author,
+          year: parsed.year || prev.year,
+          venue: parsed.venue || prev.venue,
+          school: parsed.school || prev.school,
+        }));
+      } catch (e) {
+        throw new Error("Failed to parse AI response");
+      }
+    } catch (err: any) {
+      console.error(err);
+      setErrors((prev) => ({ ...prev, file: `AI Extraction failed: ${err.message || "Unknown error"}` }));
+    } finally {
+      setAiExtracting(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const errs = validate();
@@ -80,6 +208,8 @@ export function UploadModal({ onClose, mode = "add", initialPaper }: Props) {
           school: form.school.trim() || null,
           year: parseInt(form.year),
           venue: form.venue.trim(),
+          tags,
+          folderId: form.folderId || undefined,
         });
         onClose();
       } else {
@@ -89,17 +219,23 @@ export function UploadModal({ onClose, mode = "add", initialPaper }: Props) {
         const res = await fetch("/api/upload", { method: "POST", body: fd });
         const { filePath } = await res.json();
 
-        const paper: Paper = {
-          id: crypto.randomUUID(),
+        const paperBody = {
           title: form.title.trim(),
           author: form.author.trim(),
           school: form.school.trim() || null,
           year: parseInt(form.year),
           venue: form.venue.trim(),
+          tags,
+          folderId: form.folderId || null,
           filePath,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
         };
+
+        const paperRes = await fetch("/api/papers", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(paperBody),
+        });
+        const paper = await paperRes.json();
         addPaper(paper);
         onClose();
       }
@@ -188,7 +324,40 @@ export function UploadModal({ onClose, mode = "add", initialPaper }: Props) {
                   </div>
                 )}
               </div>
-              {errors.file && <p style={{ margin: "-8px 0 0", fontSize: "12px", color: "#e03131" }}>{errors.file}</p>}
+              {file && (
+                <div style={{ display: "flex", justifyContent: "center", marginTop: "8px" }}>
+                  <button
+                    type="button"
+                    onClick={extractMetadataWithAI}
+                    disabled={aiExtracting}
+                    className="btn btn-ghost"
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      fontSize: "12px",
+                      color: "var(--accent)",
+                      background: "rgba(99, 102, 241, 0.08)",
+                      border: "1px solid rgba(99, 102, 241, 0.2)",
+                      padding: "6px 14px",
+                    }}
+                  >
+                    {aiExtracting ? (
+                      <>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ animation: "spin 0.8s linear infinite" }}>
+                          <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
+                        </svg>
+                        Extracting Metadata...
+                      </>
+                    ) : (
+                      <>
+                        ✨ Auto Fill with AI
+                      </>
+                    )}
+                  </button>
+                </div>
+              )}
+              {errors.file && <p style={{ margin: file ? "4px 0 0" : "-8px 0 0", fontSize: "12px", color: "#e03131", textAlign: "center" }}>{errors.file}</p>}
             </>
           )}
 
@@ -200,6 +369,101 @@ export function UploadModal({ onClose, mode = "add", initialPaper }: Props) {
             {field("School / Institution", "school", { required: false, placeholder: "Optional" })}
           </div>
           {field("Venue / Journal", "venue", { placeholder: "e.g. NeurIPS 2025" })}
+
+          {/* Folder Selection */}
+          <div>
+            <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "var(--text-2)", marginBottom: "5px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+              Folder <span style={{ fontWeight: 400, color: "var(--text-3)", textTransform: "none", letterSpacing: 0 }}>(optional)</span>
+            </label>
+            <select
+              className="input"
+              value={form.folderId}
+              onChange={(e) => setForm(prev => ({ ...prev, folderId: e.target.value }))}
+              style={{ cursor: "pointer" }}
+            >
+              <option value="">No Folder</option>
+              {folders.map(f => (
+                <option key={f.id} value={f.id}>{f.name}</option>
+              ))}
+            </select>
+          </div>
+
+          <style>{`
+            @keyframes spin { to { transform: rotate(360deg); } }
+    `}</style>
+
+          {/* Tags input */}
+          <div>
+            <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "var(--text-2)", marginBottom: "5px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+              Tags <span style={{ fontWeight: 400, color: "var(--text-3)", textTransform: "none", letterSpacing: 0 }}>(optional)</span>
+            </label>
+            <div
+              style={{
+                display: "flex",
+                flexWrap: "wrap",
+                gap: "6px",
+                padding: "7px 10px",
+                border: "1px solid var(--border)",
+                borderRadius: "var(--radius-sm)",
+                background: "var(--surface)",
+                cursor: "text",
+                minHeight: "38px",
+                alignItems: "center",
+              }}
+              onClick={() => document.getElementById("tag-input")?.focus()}
+            >
+              {tags.map((tag) => (
+                <span
+                  key={tag}
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "4px",
+                    padding: "2px 8px",
+                    borderRadius: "999px",
+                    background: "#eef2ff",
+                    color: "#3730a3",
+                    fontSize: "12px",
+                    fontWeight: 500,
+                    lineHeight: 1.6,
+                  }}
+                >
+                  {tag.toUpperCase()}
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); removeTag(tag); }}
+                    style={{ background: "none", border: "none", padding: 0, cursor: "pointer", color: "#6366f1", display: "flex", alignItems: "center" }}
+                  >
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                      <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                  </button>
+                </span>
+              ))}
+              <input
+                id="tag-input"
+                type="text"
+                value={tagInput}
+                onChange={(e) => setTagInput(e.target.value)}
+                onKeyDown={handleTagKeyDown}
+                onBlur={() => { if (tagInput.trim()) addTag(tagInput); }}
+                placeholder={tags.length === 0 ? "Type & press Enter to add (e.g. Quantization, Survey)" : ""}
+                style={{
+                  border: "none",
+                  outline: "none",
+                  flex: 1,
+                  minWidth: "140px",
+                  fontSize: "13px",
+                  color: "var(--text-1)",
+                  background: "transparent",
+                  padding: "1px 0",
+                }}
+              />
+            </div>
+            <p style={{ margin: "4px 0 0", fontSize: "11px", color: "var(--text-3)" }}>
+              Press <kbd style={{ background: "var(--surface-3)", padding: "0 4px", borderRadius: "3px", fontSize: "10px" }}>Enter</kbd> or <kbd style={{ background: "var(--surface-3)", padding: "0 4px", borderRadius: "3px", fontSize: "10px" }}>,</kbd> to add · <kbd style={{ background: "var(--surface-3)", padding: "0 4px", borderRadius: "3px", fontSize: "10px" }}>⌫</kbd> to remove last
+            </p>
+          </div>
 
           {/* Submit */}
           <div style={{ display: "flex", gap: "10px", justifyContent: "space-between", alignItems: "center", marginTop: "4px" }}>
