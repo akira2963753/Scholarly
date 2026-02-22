@@ -100,7 +100,7 @@ function TabButton({ label, icon, active, onClick }: { label: string; icon: Reac
         border: "none",
         cursor: "pointer",
         padding: "10px 12px 9px",
-        fontSize: "13px",
+        fontSize: "14.5px",
         fontWeight: active ? 600 : 400,
         color: active ? "var(--text-1)" : "var(--text-3)",
         borderBottom: active ? "2px solid var(--accent)" : "2px solid transparent",

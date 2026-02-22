@@ -101,7 +101,7 @@ export function NoteCard({ note, highlight }: Props) {
               </span>
             )}
           </div>
-          <p style={{ margin: 0, lineHeight: 1.65, fontSize: "17.5px", fontFamily: "var(--font-ui-zh, 'Noto Serif TC'), 'EB Garamond', Georgia, serif", fontWeight: 700 }}>
+          <p style={{ margin: 0, lineHeight: 1.65, fontSize: "14.5px", fontFamily: "var(--font-ui-zh, 'Noto Serif TC'), 'EB Garamond', Georgia, serif", fontWeight: 700 }}>
             "{quotedText}"
           </p>
         </div>
@@ -118,7 +118,7 @@ export function NoteCard({ note, highlight }: Props) {
             width: "100%",
             minHeight: "72px",
             padding: "8px 10px",
-            fontSize: "16.5px",
+            fontSize: "13.5px",
             lineHeight: 1.6,
             fontFamily: "var(--font-ui-zh, 'Noto Serif TC'), 'EB Garamond', Georgia, serif",
             fontWeight: 700,
@@ -148,7 +148,7 @@ export function NoteCard({ note, highlight }: Props) {
           display: "flex",
           alignItems: "center",
           gap: "4px",
-          fontSize: "11px",
+          fontSize: "13px",
           color: "var(--text-3)",
           background: "none",
           border: "none",
@@ -160,7 +160,7 @@ export function NoteCard({ note, highlight }: Props) {
         onMouseEnter={(e) => (e.currentTarget.style.color = "#e03131")}
         onMouseLeave={(e) => (e.currentTarget.style.color = "var(--text-3)")}
       >
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <polyline points="3 6 5 6 21 6" />
           <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
         </svg>
