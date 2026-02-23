@@ -28,6 +28,32 @@
   --radius-lg: 10px;
 }
 
+/* ─── Dark Mode Tokens ──────────────────────────────────── */
+.dark {
+  --surface: #121212;
+  --surface-2: #1e1e1e;
+  --surface-3: #2d2d2d;
+  --surface-hover: #252525;
+  --border: #333333;
+  --border-strong: #444444;
+  --text-1: #e0e0e0;
+  --text-2: #a0a0a0;
+  --text-3: #707070;
+  --accent: #4a90e2;
+  --accent-hover: #7bb5fb;
+
+  /* Adjust highlight colors for dark mode to remain legible against inverted PDFs */
+  --hl-yellow: rgba(255, 215, 0, 0.4);
+  --hl-red: rgba(255, 99, 71, 0.4);
+  --hl-blue: rgba(100, 149, 237, 0.4);
+}
+
+/* ─── PDF Dark Mode Inversion ───────────────────────────── */
+/* Invert the canvas rendering the PDF so white paper becomes dark */
+.dark .react-pdf__Page canvas {
+  filter: invert(0.92) hue-rotate(180deg);
+}
+
 /* ─── Base ───────────────────────────────────────────────── */
 *,
 *::before,

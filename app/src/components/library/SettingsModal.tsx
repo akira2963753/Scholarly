@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useSettingsStore } from "@/stores/useSettingsStore";
+import { useSettingsStore, type Theme } from "@/stores/useSettingsStore";
 
 interface Props {
   onClose: () => void;
@@ -10,7 +10,7 @@ interface Props {
 type ValidationStatus = "idle" | "loading" | "ok" | "error";
 
 export function SettingsModal({ onClose }: Props) {
-  const { geminiApiKey, setGeminiApiKey } = useSettingsStore();
+  const { geminiApiKey, setGeminiApiKey, theme, setTheme } = useSettingsStore();
   const [draft, setDraft] = useState(geminiApiKey);
   const [showKey, setShowKey] = useState(false);
   const [status, setStatus] = useState<ValidationStatus>("idle");
@@ -223,6 +223,19 @@ export function SettingsModal({ onClose }: Props) {
             </div>
           </div>
 
+          <div style={{ height: "1px", background: "var(--border)", margin: "4px 0" }} />
+
+          {/* Theme selection section */}
+          <div>
+            <p style={{ margin: "0 0 14px", fontSize: "11px", fontWeight: 700, color: "var(--text-3)", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+              Appearance
+            </p>
+            <div style={{ display: "flex", gap: "12px" }}>
+              <ThemeOption value="light" label="Light" current={theme} onSelect={setTheme} />
+              <ThemeOption value="dark" label="Dark" current={theme} onSelect={setTheme} />
+            </div>
+          </div>
+
           {/* Actions */}
           <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end" }}>
             <button type="button" className="btn btn-ghost" onClick={onClose}>Cancel</button>
@@ -237,5 +250,47 @@ export function SettingsModal({ onClose }: Props) {
         @keyframes spin { to { transform: rotate(360deg); } }
       `}</style>
     </div>
+  );
+}
+
+function ThemeOption({ value, label, current, onSelect }: { value: Theme; label: string; current: Theme; onSelect: (v: Theme) => void }) {
+  const active = current === value;
+  return (
+    <button
+      type="button"
+      onClick={() => onSelect(value)}
+      style={{
+        flex: 1,
+        padding: "12px",
+        borderRadius: "8px",
+        border: `2px solid ${active ? "var(--accent)" : "var(--border)"}`,
+        background: active ? "rgba(47, 109, 224, 0.05)" : "var(--surface-2)",
+        cursor: "pointer",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        gap: "8px",
+        transition: "all 0.15s ease",
+      }}
+    >
+      {value === "light" ? (
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={active ? "var(--accent)" : "var(--text-3)"} strokeWidth="2">
+          <circle cx="12" cy="12" r="5" />
+          <line x1="12" y1="1" x2="12" y2="3" />
+          <line x1="12" y1="21" x2="12" y2="23" />
+          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+          <line x1="1" y1="12" x2="3" y2="12" />
+          <line x1="21" y1="12" x2="23" y2="12" />
+          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+        </svg>
+      ) : (
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={active ? "var(--accent)" : "var(--text-3)"} strokeWidth="2">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+        </svg>
+      )}
+      <span style={{ fontSize: "13px", fontWeight: 600, color: active ? "var(--text-1)" : "var(--text-2)" }}>{label}</span>
+    </button>
   );
 }

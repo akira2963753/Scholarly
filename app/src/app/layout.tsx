@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { EB_Garamond, Noto_Serif_TC, Noto_Sans_TC } from "next/font/google";
 import "./globals.css";
 import { SessionProviderWrapper } from "@/components/auth/SessionProviderWrapper";
+import { ThemeProvider } from "@/components/ThemeProvider";
 
 const ebGaramond = EB_Garamond({
   subsets: ["latin"],
@@ -55,7 +56,9 @@ try {
       </head>
       <body>
         <SessionProviderWrapper>
-          {children}
+          <ThemeProvider>
+            {children}
+          </ThemeProvider>
         </SessionProviderWrapper>
       </body>
     </html>
