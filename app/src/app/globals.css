@@ -256,13 +256,10 @@ body {
 
 /* Fix for multi-column PDFs and blocky highlights: 
    force text layer spans to shrink-wrap so browser native ::selection shapes 
-   perfectly around the text instead of filling the full column width.
-   Added padding-right to compensate for DOM/canvas font-metric discrepancies 
-   that otherwise cause the highlight to appear truncated. */
+   perfectly around the text instead of filling the full column width. */
 .textLayer span {
   width: max-content !important;
   min-width: min-content !important;
-  padding-right: 0.35em !important;
 }
 
 /* Allotment split-pane — thin draggable sash, no visible track */
