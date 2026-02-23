@@ -30,22 +30,22 @@
 
 /* ─── Dark Mode Tokens ──────────────────────────────────── */
 .dark {
-  --surface: #121212;
-  --surface-2: #1e1e1e;
-  --surface-3: #2d2d2d;
-  --surface-hover: #252525;
-  --border: #333333;
-  --border-strong: #444444;
-  --text-1: #e0e0e0;
-  --text-2: #a0a0a0;
-  --text-3: #707070;
-  --accent: #4a90e2;
-  --accent-hover: #7bb5fb;
+  --surface: #0a0a0a;
+  --surface-2: #141414;
+  --surface-3: #1f1f1f;
+  --surface-hover: #1a1a1a;
+  --border: #262626;
+  --border-strong: #3a3a3a;
+  --text-1: #e8e6e3;
+  --text-2: #a3a09a;
+  --text-3: #75736f;
+  --accent: #d4af37;
+  --accent-hover: #ecd16f;
 
   /* Adjust highlight colors for dark mode to remain legible against inverted PDFs */
-  --hl-yellow: rgba(255, 215, 0, 0.4);
-  --hl-red: rgba(255, 99, 71, 0.4);
-  --hl-blue: rgba(100, 149, 237, 0.4);
+  --hl-yellow: rgba(212, 175, 55, 0.35);
+  --hl-red: rgba(220, 80, 80, 0.4);
+  --hl-blue: rgba(80, 140, 220, 0.4);
 }
 
 /* ─── PDF Dark Mode Inversion ───────────────────────────── */
