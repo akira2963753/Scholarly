@@ -26,6 +26,11 @@
   --radius-sm: 4px;
   --radius-md: 6px;
   --radius-lg: 10px;
+
+  /* Button Tokens */
+  --btn-primary-bg: var(--text-1);
+  --btn-primary-text: var(--surface);
+  --btn-primary-hover: #333333;
 }
 
 /* ─── Dark Mode Tokens ──────────────────────────────────── */
@@ -46,6 +51,11 @@
   --hl-yellow: rgba(212, 175, 55, 0.35);
   --hl-red: rgba(220, 80, 80, 0.4);
   --hl-blue: rgba(80, 140, 220, 0.4);
+
+  /* Button Tokens */
+  --btn-primary-bg: var(--accent);
+  --btn-primary-text: #0a0a0a;
+  --btn-primary-hover: var(--accent-hover);
 }
 
 /* ─── PDF Dark Mode Inversion ───────────────────────────── */
@@ -108,14 +118,14 @@ body {
 }
 
 .btn-primary {
-  background: var(--text-1);
-  color: #fff;
-  border-color: var(--text-1);
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-text);
+  border-color: var(--btn-primary-bg);
 }
 
 .btn-primary:hover {
-  background: #333;
-  border-color: #333;
+  background: var(--btn-primary-hover);
+  border-color: var(--btn-primary-hover);
 }
 
 .btn-ghost {

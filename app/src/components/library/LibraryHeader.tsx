@@ -33,14 +33,14 @@ export function LibraryHeader() {
             style={{
               width: "28px",
               height: "28px",
-              background: "var(--text-1)",
+              background: "var(--btn-primary-bg)",
               borderRadius: "6px",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
             }}
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--btn-primary-text)" strokeWidth="2.5">
               <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
               <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
             </svg>
@@ -75,8 +75,8 @@ export function LibraryHeader() {
               }}>
                 <div style={{
                   width: "24px", height: "24px", borderRadius: "50%",
-                  background: "var(--text-1)", display: "flex", alignItems: "center",
-                  justifyContent: "center", color: "var(--surface)", fontSize: "11px", fontWeight: 700,
+                  background: "var(--btn-primary-bg)", display: "flex", alignItems: "center",
+                  justifyContent: "center", color: "var(--btn-primary-text)", fontSize: "11px", fontWeight: 700,
                 }}>
                   {(session.user.name?.[0] ?? session.user.email?.[0] ?? "?").toUpperCase()}
                 </div>
