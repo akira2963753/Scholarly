@@ -42,11 +42,14 @@ function normalizeViewportPosition(position: any, text: string, pageWidthPx: num
   const rawText = text.trim();
   if (!rawText) return position;
 
-  const charsPerRect = rawText.length / rects.length;
-  const cjkCount =
-    (rawText.match(/[\u3000-\u9fff\uac00-\ud7a3\u0800-\u4e00]/g) || []).length / rects.length;
+  const totalChars = rawText.length;
+  const totalCjk =
+    (rawText.match(/[\u3000-\u9fff\uac00-\ud7a3\u0800-\u4e00]/g) || []).length;
+  const charsPerRect = totalChars / rects.length;
+  const cjkCount = totalCjk / rects.length;
   const otherCount = charsPerRect - cjkCount;
 
+  // Step 1: column-bleed clamping (same logic as normalizePosition)
   const normalizedRects = rects.map((rect: any) => {
     const H = rect.height;
     const W = rect.width;
@@ -66,13 +69,44 @@ function normalizeViewportPosition(position: any, text: string, pageWidthPx: num
     return rect;
   });
 
+  // Step 2: If only 1 rect remains, detect whether it is a multi-line bounding box.
+  //
+  // getClientRects() on a Range sometimes returns a single large rect when the PDF
+  // text layer stores a paragraph as one span, or when the library's width filter
+  // discards per-line rects. We estimate the line height via a geometric-mean formula
+  // and split the rect into per-line sub-rects so the scaleY CSS creates visible gaps.
+  let finalRects = normalizedRects;
+  if (normalizedRects.length === 1) {
+    const rect = normalizedRects[0];
+    const W = rect.width;
+    const H = rect.height;
+
+    // Average char width as a fraction of line height (0.55 Latin, 1.0 CJK)
+    const estimatedCharAspect =
+      (totalCjk * 1.0 + (totalChars - totalCjk) * 0.55) / totalChars;
+
+    // Geometric-mean estimate: lineHeight² ≈ H * W / (totalChars * charAspect)
+    const estimatedLineHeight = Math.sqrt((H * W) / (totalChars * estimatedCharAspect));
+
+    // Only split when the rect is clearly taller than a single line (threshold: 1.6×)
+    if (estimatedLineHeight > 4 && H > estimatedLineHeight * 1.6) {
+      const lineCount = Math.max(2, Math.round(H / estimatedLineHeight));
+      const lineH = H / lineCount;
+      finalRects = Array.from({ length: lineCount }, (_, i) => ({
+        ...rect,
+        top: rect.top + i * lineH,
+        height: lineH,
+      }));
+    }
+  }
+
   return {
     ...position,
-    rects: normalizedRects,
+    rects: finalRects,
     boundingRect: {
       ...boundingRect,
       width:
-        Math.max(...normalizedRects.map((r: any) => r.left + r.width)) -
+        Math.max(...finalRects.map((r: any) => r.left + r.width)) -
         (boundingRect.left ?? 0),
     },
   };

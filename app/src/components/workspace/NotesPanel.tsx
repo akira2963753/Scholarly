@@ -1,60 +1,73 @@
 "use client";
 
+import { useEffect, useState, useCallback } from "react";
 import { useWorkspaceStore } from "@/stores/useWorkspaceStore";
-import { NoteCard } from "./NoteCard";
 
 export function NotesPanel() {
   const notes = useWorkspaceStore((s) => s.notes);
-  const highlights = useWorkspaceStore((s) => s.highlights);
+  const addNote = useWorkspaceStore((s) => s.addNote);
+  const updateNoteContent = useWorkspaceStore((s) => s.updateNoteContent);
+  const paperId = useWorkspaceStore((s) => s.paperId);
 
-  // Sort by highlight page number
-  const sortedNotes = [...notes].sort((a, b) => {
-    const ha = highlights.find((h) => h.id === a.highlightId);
-    const hb = highlights.find((h) => h.id === b.highlightId);
-    const pa = ha?.position.boundingRect.pageNumber ?? 0;
-    const pb = hb?.position.boundingRect.pageNumber ?? 0;
-    return pa - pb;
-  });
+  // Find the global note for this paper (one that has no highlightId or just the first note)
+  const globalNote = notes.find((n) => !n.highlightId) || notes[0];
+
+  const textBlock = globalNote?.blocks.find((b) => b.data.type === "text");
+  const extractedText = textBlock && textBlock.data.type === "text" ? textBlock.data.content : "";
+
+  const [noteText, setNoteText] = useState(extractedText);
+
+  // Sync state if globalNote changes remotely or from initial load
+  useEffect(() => {
+    setNoteText(extractedText);
+  }, [extractedText]);
+
+  const handleBlur = useCallback(() => {
+    if (!paperId) return;
+
+    if (globalNote) {
+      if (noteText !== extractedText) {
+        updateNoteContent(globalNote.id, noteText);
+      }
+    } else if (noteText.trim()) {
+      // Create a brand new global note
+      addNote({
+        id: crypto.randomUUID(),
+        paperId,
+        highlightId: null, // explicit null for global note
+        blocks: [
+          {
+            id: crypto.randomUUID(),
+            data: { type: "text", content: noteText },
+          }
+        ],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      });
+    }
+  }, [paperId, globalNote, noteText, extractedText, updateNoteContent, addNote]);
 
   return (
-    <div style={{ height: "100%", display: "flex", flexDirection: "column", background: "var(--surface)" }}>
-
-      {/* Notes list */}
-      <div style={{ flex: 1, overflowY: "auto" }}>
-        {sortedNotes.length === 0 ? (
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              height: "100%",
-              gap: "12px",
-              color: "var(--text-3)",
-              padding: "40px 24px",
-              textAlign: "center",
-            }}
-          >
-            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" style={{ opacity: 0.35 }}>
-              <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
-            </svg>
-            <div>
-              <p style={{ margin: "0 0 4px", fontSize: "13px", fontWeight: 500 }}>No notes yet</p>
-              <p style={{ margin: 0, fontSize: "12px" }}>
-                Select text in the PDF and click <strong>+ Note</strong> to begin
-              </p>
-            </div>
-          </div>
-        ) : (
-          sortedNotes.map((note) => (
-            <NoteCard
-              key={note.id}
-              note={note}
-              highlight={highlights.find((h) => h.id === note.highlightId)}
-            />
-          ))
-        )}
-      </div>
+    <div style={{ height: "100%", display: "flex", flexDirection: "column", background: "var(--surface)", padding: "20px" }}>
+      <textarea
+        value={noteText}
+        onChange={(e) => setNoteText(e.target.value)}
+        onBlur={handleBlur}
+        placeholder="Start typing your notes here..."
+        style={{
+          width: "100%",
+          height: "100%",
+          padding: "0",
+          fontSize: "14.5px",
+          lineHeight: 1.6,
+          fontFamily: "var(--font-ui-en, 'EB Garamond'), var(--font-ui-zh, 'Noto Serif TC'), Georgia, serif",
+          border: "none",
+          background: "transparent",
+          color: "var(--text-1)",
+          resize: "none",
+          outline: "none",
+        }}
+      />
     </div>
   );
 }

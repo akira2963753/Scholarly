@@ -18,7 +18,7 @@ export type NoteBlock = {
 export interface PaperNote {
   id: string;
   paperId: string;
-  highlightId: string;   // the highlight this note annotates
+  highlightId?: string | null;   // the highlight this note annotates (null for global note)
   blocks: NoteBlock[];
   createdAt: string;
   updatedAt: string;

@@ -3,12 +3,7 @@
 import Link from "next/link";
 import type { Paper } from "@/types/paper";
 
-const LEGEND = [
-  { color: "var(--hl-yellow-solid)", label: "Key Point" },
-  { color: "var(--hl-red-solid)", label: "Question" },
-  { color: "var(--hl-blue-solid)", label: "Reference" },
-  { color: "var(--hl-green-solid)", label: "Note" },
-];
+
 
 export function WorkspaceHeader({ paper }: { paper: Paper }) {
   return (
@@ -64,23 +59,7 @@ export function WorkspaceHeader({ paper }: { paper: Paper }) {
         {paper.title}
       </p>
 
-      {/* Legend */}
-      <div style={{ display: "flex", alignItems: "center", gap: "12px", flexShrink: 0 }}>
-        {LEGEND.map(({ color, label }) => (
-          <div key={label} style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-            <div
-              style={{
-                width: "10px",
-                height: "10px",
-                borderRadius: "50%",
-                background: color,
-                opacity: 0.85,
-              }}
-            />
-            <span style={{ fontSize: "11px", color: "var(--text-3)" }}>{label}</span>
-          </div>
-        ))}
-      </div>
+
     </header>
   );
 }

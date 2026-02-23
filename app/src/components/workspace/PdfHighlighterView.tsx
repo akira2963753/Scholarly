@@ -7,8 +7,6 @@ import {
     type PdfHighlighterUtils,
 } from "react-pdf-highlighter-extended";
 import { useWorkspaceStore } from "@/stores/useWorkspaceStore";
-import { SelectionTooltip } from "./SelectionTooltip";
-import { HighlightContainer } from "./HighlightContainer";
 
 interface Props {
     pdfDocument: PDFDocumentProxy;
@@ -45,7 +43,6 @@ interface Props {
  * local ref and sync to Zustand via a separate useEffect.
  */
 export const PdfHighlighterView = memo(function PdfHighlighterView({ pdfDocument }: Props) {
-    const highlights = useWorkspaceStore((s) => s.highlights);
     const setPdfUtils = useWorkspaceStore((s) => s.setPdfUtils);
 
     // Holds the PdfHighlighterUtils — never written during render (no setState).
@@ -92,19 +89,18 @@ export const PdfHighlighterView = memo(function PdfHighlighterView({ pdfDocument
                 savedScrollTop.current = container.scrollTop;
             }
         };
-    }, [highlights]);
+    }, []);
 
     return (
         <PdfHighlighter
             pdfDocument={pdfDocument}
-            highlights={highlights}
+            highlights={[]}
             utilsRef={handleUtilsRef}
-            selectionTip={<SelectionTooltip />}
             pdfScaleValue="page-width"
             style={{ height: "100%", background: "var(--surface-2)" }}
             textSelectionColor="rgba(47, 109, 224, 0.15)"
         >
-            <HighlightContainer />
+            {null}
         </PdfHighlighter>
     );
 });
