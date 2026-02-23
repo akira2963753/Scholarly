@@ -263,7 +263,7 @@ body {
 }
 
 /* Make multi-line highlights appear as distinct marker strips instead of solid blocks */
-.Highlight__part {
+.TextHighlight__part {
   transform: scaleY(0.82) !important;
   transform-origin: center !important;
   border-radius: 3px !important;
