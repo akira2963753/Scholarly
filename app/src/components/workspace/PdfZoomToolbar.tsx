@@ -58,7 +58,7 @@ export function PdfZoomToolbar() {
                 display: "flex",
                 alignItems: "center",
                 gap: "2px",
-                background: "rgba(255,255,255,0.92)",
+                background: "var(--surface)",
                 backdropFilter: "blur(8px)",
                 WebkitBackdropFilter: "blur(8px)",
                 border: "1px solid var(--border)",
