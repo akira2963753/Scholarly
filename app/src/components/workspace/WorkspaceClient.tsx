@@ -19,6 +19,7 @@ interface Props {
 export function WorkspaceClient({ paper, highlights, notes }: Props) {
   const initWorkspace = useWorkspaceStore((s) => s.initWorkspace);
   const [notesOpen, setNotesOpen] = useState(true);
+  const [activeTab, setActiveTab] = useState<"notes" | "chat">("notes");
 
   // Initialise workspace state when paper changes
   useEffect(() => {
@@ -27,11 +28,17 @@ export function WorkspaceClient({ paper, highlights, notes }: Props) {
 
   return (
     <div style={{ height: "100vh", display: "flex", flexDirection: "column", overflow: "hidden" }}>
-      <WorkspaceHeader paper={paper} />
+      <WorkspaceHeader
+        paper={paper}
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        notesOpen={notesOpen}
+        onToggleNotes={() => setNotesOpen(!notesOpen)}
+      />
       <div style={{ flex: 1, overflow: "hidden" }}>
         <ResizableSplitPane
           left={<PdfViewerPanel pdfUrl={paper.filePath} />}
-          right={<RightPanel paper={paper} onCollapse={() => setNotesOpen(false)} />}
+          right={<RightPanel paper={paper} activeTab={activeTab} onCollapse={() => setNotesOpen(false)} />}
           notesOpen={notesOpen}
           onOpenNotes={() => setNotesOpen(true)}
         />
