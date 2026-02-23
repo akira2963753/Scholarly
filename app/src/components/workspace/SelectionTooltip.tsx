@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { usePdfHighlighterContext } from "react-pdf-highlighter-extended";
-import type { ScaledPosition } from "react-pdf-highlighter-extended";
 import { useWorkspaceStore } from "@/stores/useWorkspaceStore";
 import { normalizePosition } from "@/lib/normalizePosition";
 import type { PaperHighlight, HighlightColor } from "@/types/highlight";
@@ -19,37 +18,26 @@ export function SelectionTooltip() {
   const { getCurrentSelection, removeGhostHighlight } = context;
   const { paperId, addHighlight, addNote } = useWorkspaceStore();
 
-  // Snapshot the selection the moment the tooltip appears (in ScaledPosition format).
-  // We do NOT call makeGhostHighlight() here: that API replaces the native browser
-  // selection with a ghost highlight whose position comes from the raw PDF text layer,
-  // causing the selection box to bleed into adjacent columns. Instead we keep the
-  // native selection visible (which correctly follows the text lines) and store the
-  // scaled position so it survives a button click that might clear the browser selection.
-  const pendingRef = useRef<{ position: ScaledPosition; text: string } | null>(null);
-
+  // Convert native selection to a ghost highlight immediately.
+  // This removes the browser's native ::selection (which bleeds across columns due to
+  // PDF.js text-layer bounding boxes) and gives us a React-managed highlight container
+  // where we can normalize the position to prevent column bleed.
   useEffect(() => {
     const sel = getCurrentSelection();
-    if (sel) {
-      pendingRef.current = {
-        position: sel.position,
-        text: sel.content?.text?.trim() ?? "",
-      };
+    if (sel && "makeGhostHighlight" in sel && typeof sel.makeGhostHighlight === "function") {
+      sel.makeGhostHighlight();
     }
-    return () => { pendingRef.current = null; };
   }, [getCurrentSelection]);
 
   const makeHighlight = (color: HighlightColor): PaperHighlight | null => {
-    // Prefer live native selection; fall back to ref snapshot if the click cleared it.
-    const sel = getCurrentSelection();
-    const position = sel?.position ?? pendingRef.current?.position;
-    const text = sel?.content?.text?.trim() ?? pendingRef.current?.text ?? "";
-
-    if (!position || !paperId) return null;
+    // getCurrentSelection() is null after makeGhostHighlight(); fall back to ghost.
+    const sel = getCurrentSelection() || (context as any).getGhostHighlight?.();
+    if (!sel || !paperId) return null;
     return {
       id: crypto.randomUUID(),
       color,
-      selectedText: text,
-      position: normalizePosition(position, text),
+      selectedText: sel.content?.text?.trim() || "",
+      position: normalizePosition(sel.position, sel.content?.text || ""),
       paperId,
       createdAt: new Date().toISOString(),
     };

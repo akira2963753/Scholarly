@@ -27,16 +27,82 @@ const BORDER_MAP: Record<HighlightColor, string> = {
 const GHOST_ID = "empty-id";
 
 /**
+ * Normalize a ViewportPosition (LTWHP rects) to prevent column bleed.
+ *
+ * In ScaledPosition, boundingRect.width == the PAGE width in viewport pixels
+ * (because scaledPositionToViewport stores the viewport page size in the width/height
+ * fields of every Scaled rect). We pass that value in as `pageWidthPx` so we can
+ * apply the same column-boundary clamping used by normalizePosition, but in the
+ * already-converted pixel coordinate space that HighlightContainer receives.
+ */
+function normalizeViewportPosition(position: any, text: string, pageWidthPx: number): any {
+  const { rects, boundingRect } = position;
+  if (!rects || rects.length === 0 || !text || !pageWidthPx) return position;
+
+  const rawText = text.trim();
+  if (!rawText) return position;
+
+  const charsPerRect = rawText.length / rects.length;
+  const cjkCount =
+    (rawText.match(/[\u3000-\u9fff\uac00-\ud7a3\u0800-\u4e00]/g) || []).length / rects.length;
+  const otherCount = charsPerRect - cjkCount;
+
+  const normalizedRects = rects.map((rect: any) => {
+    const H = rect.height;
+    const W = rect.width;
+    const rightEdge = rect.left + W;
+    const expectedMaxWidth = (cjkCount * 1.4 + otherCount * 0.85 + 6) * H;
+
+    if (W > expectedMaxWidth * 1.25 && W > pageWidthPx * 0.3) {
+      if (rect.left < pageWidthPx * 0.48 && rightEdge > pageWidthPx * 0.52) {
+        const safeClamp = Math.max(pageWidthPx * 0.49, rect.left + expectedMaxWidth * 1.5);
+        return { ...rect, width: Math.min(W, safeClamp - rect.left) };
+      }
+      if (rect.left > pageWidthPx * 0.5 && rightEdge > pageWidthPx * 0.95) {
+        const safeClamp = Math.max(pageWidthPx * 0.96, rect.left + expectedMaxWidth * 1.5);
+        return { ...rect, width: Math.min(W, safeClamp - rect.left) };
+      }
+    }
+    return rect;
+  });
+
+  return {
+    ...position,
+    rects: normalizedRects,
+    boundingRect: {
+      ...boundingRect,
+      width:
+        Math.max(...normalizedRects.map((r: any) => r.left + r.width)) -
+        (boundingRect.left ?? 0),
+    },
+  };
+}
+
+/**
  * Rendered once per highlight inside PdfHighlighter.
- * Uses useHighlightContainerContext() to access per-highlight data.
- * Ghost highlights (id === GHOST_ID) are styled as a neutral selection indicator
- * and have their position normalized to prevent column bleed.
+ * Ghost highlights (id === GHOST_ID) are:
+ *   – styled as a neutral selection-blue (not yellow)
+ *   – position-normalized in viewport space to prevent column bleed
  */
 export function HighlightContainer() {
   const { highlight, isScrolledTo } = useHighlightContainerContext<PaperHighlight>();
-  const { setTip } = usePdfHighlighterContext();
+  const ctx = usePdfHighlighterContext() as any;
 
   const isGhost = highlight.id === GHOST_ID;
+
+  // For ghost highlights, normalize the viewport position using the page width stored
+  // inside the ghost's original ScaledPosition (boundingRect.width == page px width).
+  const displayHighlight: any = (() => {
+    if (!isGhost) return highlight;
+    const ghostText: string = (highlight as any).content?.text ?? "";
+    const pageWidthPx: number | undefined =
+      ctx.getGhostHighlight?.()?.position?.boundingRect?.width;
+    if (!ghostText || !pageWidthPx) return highlight;
+    return {
+      ...highlight,
+      position: normalizeViewportPosition(highlight.position, ghostText, pageWidthPx),
+    };
+  })();
 
   // Ghost → neutral selection-blue; permanent → chosen colour
   const color = highlight.color ?? "yellow";
@@ -46,7 +112,7 @@ export function HighlightContainer() {
   const handleClick = isGhost
     ? undefined
     : () => {
-        setTip({
+        ctx.setTip({
           position: highlight.position,
           content: <HighlightEditMenu highlight={highlight} />,
         });
@@ -55,7 +121,7 @@ export function HighlightContainer() {
   return (
     <MonitoredHighlightContainer onMouseEnter={() => {}}>
       <TextHighlight
-        highlight={highlight}
+        highlight={displayHighlight}
         isScrolledTo={isScrolledTo}
         onClick={handleClick}
         style={{
