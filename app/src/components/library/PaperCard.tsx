@@ -32,48 +32,53 @@ export function PaperCard({ paper, index, viewMode = "grid" }: { paper: PaperDat
         {showEdit && <UploadModal mode="edit" initialPaper={paper} onClose={() => setShowEdit(false)} />}
         <div className="card" style={{ padding: "12px 16px", display: "flex", alignItems: "center", gap: "16px" }}>
 
-          <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: "4px" }}>
-            <Link href={`/workspace/${paper.id}`} className="hover:text-accent" style={{ fontWeight: 600, fontSize: "14.5px", color: "var(--text-1)", textDecoration: "none", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-              {paper.title}
-            </Link>
-            <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "12.5px", color: "var(--text-2)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-              <span style={{ fontWeight: 500 }}>{paper.author}</span>
-              <span style={{ color: "var(--border-strong)" }}>|</span>
-              <span style={{ color: "var(--text-3)" }}>{paper.venue}</span>
+          <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: "8px" }}>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+              <Link href={`/workspace/${paper.id}`} className="hover:text-accent" style={{ fontWeight: 600, fontSize: "14.5px", color: "var(--text-1)", textDecoration: "none", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                {paper.title}
+              </Link>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "12.5px", color: "var(--text-2)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                <span style={{ fontWeight: 500 }}>{paper.author}</span>
+                <span style={{ color: "var(--border-strong)" }}>|</span>
+                <span style={{ color: "var(--text-3)" }}>{paper.venue}</span>
+              </div>
             </div>
+
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+              <select
+                value={paper.folderId || ""}
+                onChange={(e) => updatePaper(paper.id, { folderId: e.target.value || null })}
+                style={{ fontSize: "12px", padding: "3px 8px", borderRadius: "12px", border: "1px solid var(--border)", background: "var(--surface-2)", color: "var(--text-3)", outline: "none", cursor: "pointer", maxWidth: "120px", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+              >
+                <option value="">No Folder</option>
+                {folders.map(f => (
+                  <option key={f.id} value={f.id}>{f.name}</option>
+                ))}
+              </select>
+
+              {(paper.tags ?? []).length > 0 && (
+                <div style={{ display: "flex", gap: "4px", flexShrink: 0 }}>
+                  {(paper.tags ?? []).slice(0, 3).map((tag) => (
+                    <span key={tag} style={{ padding: "3px 10px", borderRadius: "12px", background: "var(--surface-3)", border: "1px solid var(--border)", color: "var(--text-1)", fontSize: "12px", fontWeight: 500 }}>
+                      {tag.toUpperCase()}
+                    </span>
+                  ))}
+                  {(paper.tags ?? []).length > 3 && <span style={{ fontSize: "12px", color: "var(--text-3)", alignSelf: "center", fontWeight: 600 }}>+{paper.tags!.length - 3}</span>}
+                </div>
+              )}
+            </div>
+
           </div>
 
-          {(paper.tags ?? []).length > 0 && (
-            <div style={{ display: "flex", gap: "4px", flexShrink: 0 }}>
-              {(paper.tags ?? []).slice(0, 2).map((tag) => (
-                <span key={tag} style={{ padding: "3px 10px", borderRadius: "999px", background: "#eef2ff", color: "#3730a3", fontSize: "13px", fontWeight: 500 }}>
-                  {tag.toUpperCase()}
-                </span>
-              ))}
-              {(paper.tags ?? []).length > 2 && <span style={{ fontSize: "13px", color: "var(--text-3)", alignSelf: "center", fontWeight: 600 }}>+{paper.tags!.length - 2}</span>}
-            </div>
-          )}
-
-          <div style={{ display: "flex", gap: "8px", alignItems: "center", flexShrink: 0 }}>
-            <select
-              value={paper.folderId || ""}
-              onChange={(e) => updatePaper(paper.id, { folderId: e.target.value || null })}
-              style={{ fontSize: "13px", padding: "4px 8px", borderRadius: "4px", border: "1px solid var(--border)", background: "var(--surface-2)", color: "var(--text-3)", outline: "none", cursor: "pointer", maxWidth: "110px", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
-            >
-              <option value="">No Folder</option>
-              {folders.map(f => (
-                <option key={f.id} value={f.id}>{f.name}</option>
-              ))}
-            </select>
+          <div style={{ display: "flex", gap: "12px", alignItems: "center", flexShrink: 0 }}>
             <span className="badge" style={{ background: venueStyle.bg, color: venueStyle.text, fontSize: "13px" }}>{paper.year}</span>
+            <div style={{ display: "flex", gap: "6px", alignItems: "center", flexShrink: 0, borderLeft: "1px solid var(--border)", paddingLeft: "12px" }}>
+              <Link href={`/workspace/${paper.id}`} className="btn btn-primary" style={{ fontSize: "14px", padding: "4px 10px" }}>Open</Link>
+              <button className="btn btn-ghost" style={{ fontSize: "14px", padding: "4px 8px" }} onClick={() => setShowEdit(true)}>Edit</button>
+              <CitationCopyButton paper={paper} index={index} />
+            </div>
           </div>
-
-          <div style={{ display: "flex", gap: "6px", alignItems: "center", flexShrink: 0, borderLeft: "1px solid var(--border)", paddingLeft: "12px", marginLeft: "4px" }}>
-            <Link href={`/workspace/${paper.id}`} className="btn btn-primary" style={{ fontSize: "14px", padding: "4px 10px" }}>Open</Link>
-            <button className="btn btn-ghost" style={{ fontSize: "14px", padding: "4px 8px" }} onClick={() => setShowEdit(true)}>Edit</button>
-            <CitationCopyButton paper={paper} index={index} />
-          </div>
-
         </div>
       </>
     );
