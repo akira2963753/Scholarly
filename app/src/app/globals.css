@@ -60,7 +60,9 @@
 
 /* ─── PDF Dark Mode Inversion ───────────────────────────── */
 /* Invert the canvas rendering the PDF so white paper becomes dark */
-.dark .react-pdf__Page canvas {
+.dark .react-pdf__Page canvas,
+.dark .PdfHighlighter canvas,
+.dark .page canvas {
   filter: invert(0.92) hue-rotate(180deg);
 }
 
