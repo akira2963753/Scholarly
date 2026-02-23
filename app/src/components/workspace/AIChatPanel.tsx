@@ -53,6 +53,8 @@ export function AIChatPanel({ paper }: Props) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const [selectedModel, setSelectedModel] = useState("gemini-2.5-flash");
+
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -92,7 +94,7 @@ export function AIChatPanel({ paper }: Props) {
       }));
 
       const res = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiApiKey}`,
+        `https://generativelanguage.googleapis.com/v1beta/models/${selectedModel}:generateContent?key=${geminiApiKey}`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -238,11 +240,31 @@ export function AIChatPanel({ paper }: Props) {
           padding: "10px 14px 12px",
           display: "flex",
           flexDirection: "column",
-          gap: "6px",
+          gap: "8px",
           background: "var(--surface)",
           flexShrink: 0,
         }}
       >
+        <div style={{ display: "flex", alignItems: "center", paddingLeft: "2px" }}>
+          <select
+            value={selectedModel}
+            onChange={(e) => setSelectedModel(e.target.value)}
+            style={{
+              background: "transparent",
+              border: "none",
+              color: "var(--text-3)",
+              fontSize: "12px",
+              fontWeight: 600,
+              outline: "none",
+              cursor: "pointer",
+              padding: 0,
+            }}
+          >
+            <option value="gemini-2.5-flash">Flash ✨</option>
+            <option value="gemini-2.5-pro">Pro 🚀</option>
+          </select>
+        </div>
+
         <div style={{ display: "flex", gap: "8px", alignItems: "flex-end" }}>
           <textarea
             ref={textareaRef}
