@@ -6,6 +6,11 @@ import type { PaperNote } from "@/types/note";
 import type { PdfHighlighterUtils } from "react-pdf-highlighter-extended";
 import { useAnnotationStore } from "./useAnnotationStore";
 
+export interface ChatMessage {
+  role: "user" | "model";
+  text: string;
+}
+
 interface WorkspaceStore {
   paperId: string | null;
   highlights: PaperHighlight[];
@@ -17,9 +22,13 @@ interface WorkspaceStore {
   /** Map of highlightId → NoteCard DOM element (for reverse anchor: PDF → note) */
   noteCardRefs: Map<string, HTMLElement>;
 
+  /** Retain chat messages when switching tabs */
+  chatMessages: ChatMessage[];
+
   // ── Actions ──────────────────────────────────────────────
   initWorkspace: (paperId: string, highlights: PaperHighlight[], notes: PaperNote[]) => void;
   setPdfUtils: (utils: PdfHighlighterUtils) => void;
+  setChatMessages: (msgs: ChatMessage[]) => void;
 
   addHighlight: (highlight: PaperHighlight) => void;
   deleteHighlight: (id: string) => void;
@@ -45,11 +54,13 @@ export const useWorkspaceStore = create<WorkspaceStore>()((set, get) => ({
   notes: [],
   pdfUtils: null,
   noteCardRefs: new Map(),
+  chatMessages: [],
 
   initWorkspace: (paperId, highlights, notes) =>
-    set({ paperId, highlights, notes, pdfUtils: null, noteCardRefs: new Map() }),
+    set({ paperId, highlights, notes, pdfUtils: null, noteCardRefs: new Map(), chatMessages: [] }),
 
   setPdfUtils: (utils) => set({ pdfUtils: utils }),
+  setChatMessages: (msgs) => set({ chatMessages: msgs }),
 
   // ── Write-through: update runtime state + persist to annotation store ────
 

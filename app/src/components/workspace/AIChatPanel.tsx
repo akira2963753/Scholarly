@@ -6,10 +6,7 @@ import { useWorkspaceStore } from "@/stores/useWorkspaceStore";
 import type { Paper } from "@/types/paper";
 import type { PaperHighlight } from "@/types/highlight";
 
-interface Message {
-  role: "user" | "model";
-  text: string;
-}
+import type { ChatMessage } from "@/stores/useWorkspaceStore";
 
 interface Props {
   paper: Paper;
@@ -42,13 +39,18 @@ Answer questions about this paper concisely and accurately. If asked about somet
 export function AIChatPanel({ paper }: Props) {
   const geminiApiKey = useSettingsStore((s) => s.geminiApiKey);
   const highlights = useWorkspaceStore((s) => s.highlights);
+  const { chatMessages: messages, setChatMessages: setMessages } = useWorkspaceStore();
 
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      role: "model",
-      text: `Hi! I'm your AI research assistant for **"${paper.title}"**. Ask me anything about this paper.`,
-    },
-  ]);
+  useEffect(() => {
+    if (messages.length === 0) {
+      setMessages([
+        {
+          role: "model",
+          text: `Hi! I'm your AI research assistant for **"${paper.title}"**. Ask me anything about this paper.`,
+        },
+      ]);
+    }
+  }, [paper.title, messages.length, setMessages]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -74,7 +76,7 @@ export function AIChatPanel({ paper }: Props) {
     const text = input.trim();
     if (!text || loading) return;
 
-    const userMsg: Message = { role: "user", text };
+    const userMsg: ChatMessage = { role: "user", text };
     const nextMessages = [...messages, userMsg];
     setMessages(nextMessages);
     setInput("");
@@ -129,7 +131,7 @@ export function AIChatPanel({ paper }: Props) {
         data.candidates?.[0]?.content?.parts?.[0]?.text ??
         "(No response, please try again)";
 
-      setMessages((prev) => [...prev, { role: "model", text: reply }]);
+      setMessages([...nextMessages, { role: "model", text: reply }]);
     } catch {
       setError("Network error, please check your connection and try again.");
     } finally {
@@ -318,7 +320,7 @@ import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
 import "katex/dist/katex.min.css";
 
-function MessageBubble({ message }: { message: Message }) {
+function MessageBubble({ message }: { message: ChatMessage }) {
   const isUser = message.role === "user";
   return (
     <div style={{ display: "flex", justifyContent: isUser ? "flex-end" : "flex-start" }}>
