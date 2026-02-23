@@ -112,14 +112,14 @@ export function HighlightContainer() {
   const handleClick = isGhost
     ? undefined
     : () => {
-        ctx.setTip({
-          position: highlight.position,
-          content: <HighlightEditMenu highlight={highlight} />,
-        });
-      };
+      ctx.setTip({
+        position: highlight.position,
+        content: <HighlightEditMenu highlight={highlight} />,
+      });
+    };
 
   return (
-    <MonitoredHighlightContainer onMouseEnter={() => {}}>
+    <MonitoredHighlightContainer onMouseEnter={() => { }}>
       <TextHighlight
         highlight={displayHighlight}
         isScrolledTo={isScrolledTo}
@@ -131,8 +131,6 @@ export function HighlightContainer() {
           borderRadius: "2px",
           cursor: isGhost ? "text" : "pointer",
           transition: "outline 0.2s ease",
-          transform: "scaleY(0.85)",
-          transformOrigin: "bottom",
         }}
       />
     </MonitoredHighlightContainer>

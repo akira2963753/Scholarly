@@ -262,6 +262,13 @@ body {
   min-width: min-content !important;
 }
 
+/* Make multi-line highlights appear as distinct marker strips instead of solid blocks */
+.Highlight__part {
+  transform: scaleY(0.82) !important;
+  transform-origin: center !important;
+  border-radius: 3px !important;
+}
+
 /* Allotment split-pane — thin draggable sash, no visible track */
 .workspace-split {
   --sash-size: 4px;
