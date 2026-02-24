@@ -32,17 +32,27 @@ export async function POST(
     const body = await req.json();
     const { type, ...data } = body;
 
-    if (type === "highlight") {
-        const [h] = await db.insert(highlights).values({ ...data, paperId, userId }).returning();
-        return NextResponse.json(h, { status: 201 });
-    }
+    try {
+        if (type === "highlight") {
+            const [h] = await db.insert(highlights).values({ ...data, paperId, userId }).returning();
+            return NextResponse.json(h, { status: 201 });
+        }
 
-    if (type === "note") {
-        const [n] = await db.insert(notes).values({ ...data, paperId, userId }).returning();
-        return NextResponse.json(n, { status: 201 });
-    }
+        if (type === "note") {
+            const insertData = { ...data, paperId, userId };
+            // Ensure dates are parsed correctly if Drizzle/pg struggles with ISO strings
+            if (insertData.createdAt) insertData.createdAt = new Date(insertData.createdAt);
+            if (insertData.updatedAt) insertData.updatedAt = new Date(insertData.updatedAt);
 
-    return NextResponse.json({ error: "Invalid type" }, { status: 400 });
+            const [n] = await db.insert(notes).values(insertData).returning();
+            return NextResponse.json(n, { status: 201 });
+        }
+
+        return NextResponse.json({ error: "Invalid type" }, { status: 400 });
+    } catch (error) {
+        console.error("Error in POST annotation:", error);
+        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    }
 }
 
 export async function PATCH(
@@ -56,25 +66,33 @@ export async function PATCH(
     const body = await req.json();
     const { type, id, ...data } = body;
 
-    if (type === "highlight") {
-        const [h] = await db
-            .update(highlights)
-            .set(data)
-            .where(and(eq(highlights.id, id), eq(highlights.paperId, paperId), eq(highlights.userId, userId)))
-            .returning();
-        return NextResponse.json(h);
-    }
+    try {
+        if (type === "highlight") {
+            const [h] = await db
+                .update(highlights)
+                .set(data)
+                .where(and(eq(highlights.id, id), eq(highlights.paperId, paperId), eq(highlights.userId, userId)))
+                .returning();
+            return NextResponse.json(h);
+        }
 
-    if (type === "note") {
-        const [n] = await db
-            .update(notes)
-            .set({ ...data, updatedAt: new Date() })
-            .where(and(eq(notes.id, id), eq(notes.paperId, paperId), eq(notes.userId, userId)))
-            .returning();
-        return NextResponse.json(n);
-    }
+        if (type === "note") {
+            const updateData = { ...data, updatedAt: new Date() };
+            if (updateData.createdAt) updateData.createdAt = new Date(updateData.createdAt);
 
-    return NextResponse.json({ error: "Invalid type" }, { status: 400 });
+            const [n] = await db
+                .update(notes)
+                .set(updateData)
+                .where(and(eq(notes.id, id), eq(notes.paperId, paperId), eq(notes.userId, userId)))
+                .returning();
+            return NextResponse.json(n);
+        }
+
+        return NextResponse.json({ error: "Invalid type" }, { status: 400 });
+    } catch (error) {
+        console.error("Error in PATCH annotation:", error);
+        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    }
 }
 
 export async function DELETE(

@@ -14,10 +14,14 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     useEffect(() => {
         if (!mounted) return;
 
+        // Reset classes
+        document.documentElement.classList.remove("dark", "sepia");
+
+        // Apply new theme
         if (theme === "dark") {
             document.documentElement.classList.add("dark");
-        } else {
-            document.documentElement.classList.remove("dark");
+        } else if (theme === "sepia") {
+            document.documentElement.classList.add("sepia");
         }
     }, [theme, mounted]);
 

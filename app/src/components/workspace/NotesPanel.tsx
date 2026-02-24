@@ -62,14 +62,27 @@ export function NotesPanel() {
     if (!paperId) return;
 
     const newRawText = stringifySections(sections);
+    console.log("NotesPanel handleBlur triggered:", {
+      newRawText,
+      extractedText,
+      hasGlobalNote: !!globalNote
+    });
 
     // Prevent useless saves
-    if (newRawText === extractedText) return;
-    if (!newRawText.replace(/###.*?\n/g, "").trim() && !extractedText) return;
+    if (newRawText === extractedText) {
+      console.log("NotesPanel: Content unchanged, skipping save.");
+      return;
+    }
+    if (!newRawText.replace(/###.*?\n/g, "").trim() && !extractedText) {
+      console.log("NotesPanel: Content is essentially empty, skipping save.");
+      return;
+    }
 
     if (globalNote) {
+      console.log("NotesPanel: Updating existing note", globalNote.id);
       updateNoteContent(globalNote.id, newRawText);
     } else {
+      console.log("NotesPanel: Adding new note for paper", paperId);
       addNote({
         id: crypto.randomUUID(),
         paperId,

@@ -58,6 +58,35 @@
   --btn-primary-hover: var(--accent-hover);
 }
 
+/* ─── Sepia Mode Tokens ──────────────────────────────────── */
+.sepia {
+  --surface: #f4f1ea;
+  /* Base oatmeal/paper color */
+  --surface-2: #ece8df;
+  /* Sidebar/Panel color */
+  --surface-3: #e4e0d5;
+  --surface-hover: #ebe7de;
+  --border: #d8d2c6;
+  --border-strong: #c2baa9;
+  --text-1: #433f38;
+  /* Soft dark coffee text */
+  --text-2: #6b665c;
+  --text-3: #9b9588;
+  --accent: #d97757;
+  /* Terracotta red accent */
+  --accent-hover: #c46445;
+
+  /* Adjust highlight colors to blend into warm paper */
+  --hl-yellow: rgba(235, 185, 45, 0.4);
+  --hl-red: rgba(215, 95, 85, 0.35);
+  --hl-blue: rgba(85, 145, 205, 0.35);
+
+  /* Button Tokens */
+  --btn-primary-bg: var(--text-1);
+  --btn-primary-text: var(--surface);
+  --btn-primary-hover: #2a2722;
+}
+
 /* ─── PDF Dark Mode Inversion ───────────────────────────── */
 /* Invert the canvas rendering the PDF so white paper becomes dark */
 .dark .react-pdf__Page canvas,
