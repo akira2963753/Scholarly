@@ -18,6 +18,7 @@ interface Props {
 
 export function WorkspaceClient({ paper, highlights, notes }: Props) {
   const initWorkspace = useWorkspaceStore((s) => s.initWorkspace);
+  const setAnnotations = useWorkspaceStore((s) => s.setAnnotations);
   const [notesOpen, setNotesOpen] = useState(true);
   const [activeTab, setActiveTab] = useState<"notes" | "chat">("notes");
 
@@ -25,6 +26,11 @@ export function WorkspaceClient({ paper, highlights, notes }: Props) {
   useEffect(() => {
     initWorkspace(paper.id, highlights, notes);
   }, [paper.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Sync notes/highlights into workspace store after async fetchAnnotations completes
+  useEffect(() => {
+    setAnnotations(highlights, notes);
+  }, [highlights, notes, setAnnotations]);
 
   return (
     <div style={{ height: "100vh", display: "flex", flexDirection: "column", overflow: "hidden" }}>

@@ -60,31 +60,31 @@
 
 /* ─── Sepia Mode Tokens ──────────────────────────────────── */
 .sepia {
-  --surface: #f4f1ea;
-  /* Base oatmeal/paper color */
-  --surface-2: #ece8df;
-  /* Sidebar/Panel color */
-  --surface-3: #e4e0d5;
-  --surface-hover: #ebe7de;
-  --border: #d8d2c6;
-  --border-strong: #c2baa9;
-  --text-1: #433f38;
-  /* Soft dark coffee text */
-  --text-2: #6b665c;
-  --text-3: #9b9588;
-  --accent: #d97757;
-  /* Terracotta red accent */
-  --accent-hover: #c46445;
+  --surface: #f9f7f3;
+  /* Warm white — barely tinted, not yellow */
+  --surface-2: #f0ede6;
+  /* Sidebar/Panel: warm off-white */
+  --surface-3: #e6e2da;
+  --surface-hover: #e9e5dd;
+  --border: #d6d1c8;
+  --border-strong: #c3bdb2;
+  --text-1: #2d2a26;
+  /* Near-black warm brown — stronger contrast */
+  --text-2: #6a6560;
+  --text-3: #9a9590;
+  --accent: #8c7245;
+  /* Warm amber-brown — scholarly, refined */
+  --accent-hover: #715a36;
 
-  /* Adjust highlight colors to blend into warm paper */
-  --hl-yellow: rgba(235, 185, 45, 0.4);
-  --hl-red: rgba(215, 95, 85, 0.35);
-  --hl-blue: rgba(85, 145, 205, 0.35);
+  /* Adjusted highlights for warm background */
+  --hl-yellow: rgba(210, 165, 60, 0.38);
+  --hl-red: rgba(210, 90, 80, 0.32);
+  --hl-blue: rgba(70, 130, 200, 0.32);
 
   /* Button Tokens */
   --btn-primary-bg: var(--text-1);
   --btn-primary-text: var(--surface);
-  --btn-primary-hover: #2a2722;
+  --btn-primary-hover: #1b1916;
 }
 
 /* ─── PDF Dark Mode Inversion ───────────────────────────── */

@@ -31,6 +31,7 @@ interface WorkspaceStore {
 
   // ── Actions ──────────────────────────────────────────────
   initWorkspace: (paperId: string, highlights: PaperHighlight[], notes: PaperNote[]) => void;
+  setAnnotations: (highlights: PaperHighlight[], notes: PaperNote[]) => void;
   setPdfUtils: (utils: PdfHighlighterUtils) => void;
   setChatMessages: (msgs: ChatMessage[]) => void;
   setPaperFileUri: (uri: string | null) => void;
@@ -66,6 +67,8 @@ export const useWorkspaceStore = create<WorkspaceStore>()((set, get) => ({
 
   initWorkspace: (paperId, highlights, notes) =>
     set({ paperId, highlights, notes, pdfUtils: null, noteCardRefs: new Map(), chatMessages: [], paperFileUri: null, aiContextLoadedVisible: false }),
+
+  setAnnotations: (highlights, notes) => set({ highlights, notes }),
 
   setPdfUtils: (utils) => set({ pdfUtils: utils }),
   setChatMessages: (msgs) => set({ chatMessages: msgs }),
