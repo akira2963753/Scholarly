@@ -24,11 +24,14 @@ interface WorkspaceStore {
 
   /** Retain chat messages when switching tabs */
   chatMessages: ChatMessage[];
+  /** Gemini File API URI for the current paper's PDF */
+  paperFileUri: string | null;
 
   // ── Actions ──────────────────────────────────────────────
   initWorkspace: (paperId: string, highlights: PaperHighlight[], notes: PaperNote[]) => void;
   setPdfUtils: (utils: PdfHighlighterUtils) => void;
   setChatMessages: (msgs: ChatMessage[]) => void;
+  setPaperFileUri: (uri: string | null) => void;
 
   addHighlight: (highlight: PaperHighlight) => void;
   deleteHighlight: (id: string) => void;
@@ -55,12 +58,14 @@ export const useWorkspaceStore = create<WorkspaceStore>()((set, get) => ({
   pdfUtils: null,
   noteCardRefs: new Map(),
   chatMessages: [],
+  paperFileUri: null,
 
   initWorkspace: (paperId, highlights, notes) =>
-    set({ paperId, highlights, notes, pdfUtils: null, noteCardRefs: new Map(), chatMessages: [] }),
+    set({ paperId, highlights, notes, pdfUtils: null, noteCardRefs: new Map(), chatMessages: [], paperFileUri: null }),
 
   setPdfUtils: (utils) => set({ pdfUtils: utils }),
   setChatMessages: (msgs) => set({ chatMessages: msgs }),
+  setPaperFileUri: (uri) => set({ paperFileUri: uri }),
 
   // ── Write-through: update runtime state + persist to annotation store ────
 

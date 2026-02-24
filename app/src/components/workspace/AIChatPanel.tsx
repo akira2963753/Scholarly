@@ -39,7 +39,58 @@ Answer questions about this paper concisely and accurately. If asked about somet
 export function AIChatPanel({ paper }: Props) {
   const geminiApiKey = useSettingsStore((s) => s.geminiApiKey);
   const highlights = useWorkspaceStore((s) => s.highlights);
-  const { chatMessages: messages, setChatMessages: setMessages } = useWorkspaceStore();
+  const { chatMessages: messages, setChatMessages: setMessages, paperFileUri, setPaperFileUri } = useWorkspaceStore();
+
+  const [uploadingPdf, setUploadingPdf] = useState(false);
+  const [uploadError, setUploadError] = useState(false);
+  const uploadStartedRef = useRef(false);
+
+  // Upload PDF to Gemini
+  useEffect(() => {
+    if (paperFileUri || !geminiApiKey || uploadStartedRef.current) return;
+    uploadStartedRef.current = true;
+    let isCancelled = false;
+
+    async function uploadPdf() {
+      setUploadingPdf(true);
+      setUploadError(false);
+      try {
+        const pdfRes = await fetch(paper.filePath);
+        const pdfBlob = await pdfRes.blob();
+
+        const uploadRes = await fetch(`https://generativelanguage.googleapis.com/upload/v1beta/files?key=${geminiApiKey}`, {
+          method: "POST",
+          headers: {
+            "X-Goog-Upload-Command": "start, upload, finalize",
+            "X-Goog-Upload-Header-Content-Length": pdfBlob.size.toString(),
+            "X-Goog-Upload-Header-Content-Type": "application/pdf",
+            "Content-Type": "application/pdf",
+          },
+          body: pdfBlob,
+        });
+
+        const data = await uploadRes.json();
+        if (!isCancelled) {
+          if (data.file && data.file.uri) {
+            setPaperFileUri(data.file.uri);
+          } else {
+            console.error("Gemini Upload Error:", data);
+            setUploadError(true);
+          }
+        }
+      } catch (err) {
+        if (!isCancelled) {
+          console.error("Upload exception:", err);
+          setUploadError(true);
+        }
+      } finally {
+        if (!isCancelled) setUploadingPdf(false);
+      }
+    }
+    uploadPdf();
+
+    return () => { isCancelled = true; };
+  }, [paper.filePath, geminiApiKey, paperFileUri, setPaperFileUri]);
 
   useEffect(() => {
     if (messages.length === 0) {
@@ -87,13 +138,23 @@ export function AIChatPanel({ paper }: Props) {
     setLoading(true);
 
     try {
-      const systemText = buildSystemPrompt(paper, highlights);
+      const systemText = buildSystemPrompt(paper, highlights) +
+        (paperFileUri ? "\n\nThe entire PDF of the paper is provided in the very first user message. Please refer to it extensively for accurate answers." : "");
 
       const firstUserIdx = nextMessages.findIndex((m) => m.role === "user");
-      const apiContents = nextMessages.slice(firstUserIdx).map((m) => ({
-        role: m.role,
-        parts: [{ text: m.text }],
-      }));
+      const apiContents = nextMessages.slice(firstUserIdx).map((m, idx) => {
+        const parts: any[] = [{ text: m.text }];
+        // Append the uploaded PDF to the very first user message we send to Gemini
+        if (idx === 0 && paperFileUri) {
+          parts.unshift({
+            fileData: { mimeType: "application/pdf", fileUri: paperFileUri },
+          });
+        }
+        return {
+          role: m.role,
+          parts,
+        };
+      });
 
       const res = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/${selectedModel}:generateContent?key=${geminiApiKey}`,
@@ -193,6 +254,25 @@ export function AIChatPanel({ paper }: Props) {
 
   return (
     <div style={{ height: "100%", display: "flex", flexDirection: "column" }}>
+      {/* Status Banners */}
+      {uploadingPdf && (
+        <div style={{ padding: "8px 16px", background: "var(--surface-2)", color: "var(--text-3)", fontSize: "12px", display: "flex", alignItems: "center", gap: "8px", borderBottom: "1px solid var(--border)" }}>
+          <ThinkingDots />
+          <span style={{ fontWeight: 500 }}>Uploading PDF to AI for full-text context (may take a few seconds)...</span>
+        </div>
+      )}
+      {uploadError && (
+        <div style={{ padding: "8px 16px", background: "#fff5f5", color: "#c92a2a", fontSize: "12px", borderBottom: "1px solid #ffc9c9" }}>
+          Failed to upload PDF for full-text context. The AI will only read your highlights.
+        </div>
+      )}
+      {paperFileUri && !uploadingPdf && !uploadError && (
+        <div style={{ padding: "8px 16px", background: "rgba(20, 163, 83, 0.1)", color: "#14a353", fontSize: "12px", display: "flex", alignItems: "center", gap: "6px", borderBottom: "1px solid rgba(20, 163, 83, 0.2)" }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          <span style={{ fontWeight: 500 }}>PDF fully loaded into AI context</span>
+        </div>
+      )}
+
       {/* Message list */}
       <div style={{ flex: 1, overflowY: "auto", padding: "16px", display: "flex", flexDirection: "column", gap: "12px" }}>
         {messages.map((msg, i) => (
@@ -297,7 +377,7 @@ export function AIChatPanel({ paper }: Props) {
           />
           <button
             onClick={sendMessage}
-            disabled={!input.trim() || loading}
+            disabled={!input.trim() || loading || uploadingPdf}
             className="btn btn-primary"
             style={{ padding: "7px 12px", flexShrink: 0, alignSelf: "flex-end" }}
           >
