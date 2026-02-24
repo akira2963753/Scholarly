@@ -3,71 +3,199 @@
 import { useEffect, useState, useCallback } from "react";
 import { useWorkspaceStore } from "@/stores/useWorkspaceStore";
 
+const SECTIONS = [
+  { id: "summary", title: "📝 Summary" },
+  { id: "problem", title: "🎯 Problem Statement" },
+  { id: "contributions", title: "✨ Key Contributions" },
+  { id: "takeaways", title: "💡 My Takeaways" },
+];
+
+function parseNoteToSections(rawText: string) {
+  const result: Record<string, string> = { summary: "", problem: "", contributions: "", takeaways: "" };
+  let currentKey = "summary";
+
+  const lines = rawText.split("\n");
+  const buffer: string[] = [];
+
+  for (const line of lines) {
+    const match = SECTIONS.find(s => line.trim() === `### ${s.title}`);
+    if (match) {
+      if (buffer.length > 0) result[currentKey] = buffer.join("\n").trim();
+      buffer.length = 0;
+      currentKey = match.id;
+    } else {
+      buffer.push(line);
+    }
+  }
+  if (buffer.length > 0) result[currentKey] = buffer.join("\n").trim();
+
+  // Clean up initial preamble if empty
+  if (!rawText.includes("### 📝 One-Sentence Summary") && result.summary === rawText.trim()) {
+    // Legacy mode: everything is in summary if no headers exist
+  }
+
+  return result;
+}
+
+function stringifySections(sections: Record<string, string>) {
+  return SECTIONS.map(s => `### ${s.title}\n${sections[s.id] || ""}`).join("\n\n");
+}
+
 export function NotesPanel() {
   const notes = useWorkspaceStore((s) => s.notes);
   const addNote = useWorkspaceStore((s) => s.addNote);
   const updateNoteContent = useWorkspaceStore((s) => s.updateNoteContent);
   const paperId = useWorkspaceStore((s) => s.paperId);
 
-  // Find the global note for this paper (one that has no highlightId or just the first note)
   const globalNote = notes.find((n) => !n.highlightId) || notes[0];
-
   const textBlock = globalNote?.blocks.find((b) => b.data.type === "text");
   const extractedText = textBlock && textBlock.data.type === "text" ? textBlock.data.content : "";
 
-  const [noteText, setNoteText] = useState(extractedText);
+  const [sections, setSections] = useState(() => parseNoteToSections(extractedText));
+  const [expandedId, setExpandedId] = useState<string>("");
 
-  // Sync state if globalNote changes remotely or from initial load
   useEffect(() => {
-    setNoteText(extractedText);
+    setSections(parseNoteToSections(extractedText));
   }, [extractedText]);
 
   const handleBlur = useCallback(() => {
     if (!paperId) return;
 
+    const newRawText = stringifySections(sections);
+
+    // Prevent useless saves
+    if (newRawText === extractedText) return;
+    if (!newRawText.replace(/###.*?\n/g, "").trim() && !extractedText) return;
+
     if (globalNote) {
-      if (noteText !== extractedText) {
-        updateNoteContent(globalNote.id, noteText);
-      }
-    } else if (noteText.trim()) {
-      // Create a brand new global note
+      updateNoteContent(globalNote.id, newRawText);
+    } else {
       addNote({
         id: crypto.randomUUID(),
         paperId,
-        highlightId: null, // explicit null for global note
-        blocks: [
-          {
-            id: crypto.randomUUID(),
-            data: { type: "text", content: noteText },
-          }
-        ],
+        highlightId: null,
+        blocks: [{ id: crypto.randomUUID(), data: { type: "text", content: newRawText } }],
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       });
     }
-  }, [paperId, globalNote, noteText, extractedText, updateNoteContent, addNote]);
+  }, [paperId, globalNote, sections, extractedText, updateNoteContent, addNote]);
+
+  const updateSection = (id: string, text: string) => {
+    setSections(prev => ({ ...prev, [id]: text }));
+  };
+
+  // Helper: switch to the card view or toggle back to list view
+  const toggleExpanded = (id: string) => {
+    setExpandedId(prev => prev === id ? "" : id);
+  };
 
   return (
-    <div style={{ height: "100%", display: "flex", flexDirection: "column", background: "var(--surface)", padding: "20px" }}>
-      <textarea
-        value={noteText}
-        onChange={(e) => setNoteText(e.target.value)}
-        onBlur={handleBlur}
-        placeholder="Start typing your notes here..."
-        style={{
-          width: "100%",
-          height: "100%",
-          padding: "0",
-          fontSize: "14.5px",
-          lineHeight: 1.6,
-          fontFamily: "var(--font-ui-en, 'EB Garamond'), var(--font-ui-zh, 'Noto Serif TC'), Georgia, serif",
-          border: "none",
-          background: "transparent",
-          color: "var(--text-1)",
-          resize: "none",
-          outline: "none",
-        }}
-      />
+    <div style={{ height: "100%", display: "flex", flexDirection: "column", background: "var(--surface)", padding: "16px", gap: "10px", overflowY: "auto" }}>
+      {/* 
+        If nothing is expanded, show all headers. 
+        If something IS expanded, show ONLY that card, and make it flex: 1
+      */}
+      {SECTIONS.map((sec) => {
+        const isExpanded = expandedId === sec.id;
+        const hasContent = sections[sec.id].trim().length > 0;
+
+        // Peak focus mode: If a card is expanded, hide all the other cards completely
+        if (expandedId && !isExpanded) return null;
+
+        return (
+          <div
+            key={sec.id}
+            style={{
+              background: "var(--surface)",
+              border: isExpanded ? "1px solid var(--accent)" : "1px solid var(--border)",
+              borderRadius: "10px",
+              overflow: "hidden",
+              transition: "all 0.2s ease",
+              boxShadow: isExpanded ? "0 4px 12px rgba(0,0,0,0.05)" : "none",
+              // Critical: Let the focused card fill all available vertical space!
+              display: "flex",
+              flexDirection: "column",
+              flex: isExpanded ? 1 : "none",
+            }}
+          >
+            {/* Header / Trigger */}
+            <div
+              onClick={() => toggleExpanded(sec.id)}
+              style={{
+                padding: "12px 16px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                cursor: "pointer",
+                background: isExpanded ? "var(--surface-2)" : "transparent",
+                borderBottom: isExpanded ? "1px solid var(--border)" : "none",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <span style={{ fontSize: "14px", fontWeight: 600, color: isExpanded ? "var(--accent)" : "var(--text-2)" }}>
+                  {sec.title}
+                </span>
+                {!isExpanded && hasContent && (
+                  <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: "var(--accent)" }} />
+                )}
+              </div>
+
+              <svg
+                width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-3)" strokeWidth="2"
+                style={{ transform: isExpanded ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s" }}
+              >
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </div>
+
+            {/* Subtle content preview when collapsed */}
+            {!isExpanded && hasContent && (
+              <div
+                style={{
+                  padding: "0 16px 14px",
+                  fontSize: "12px",
+                  color: "var(--text-3)",
+                  lineHeight: 1.5,
+                  display: "-webkit-box",
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: "vertical",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  pointerEvents: "none",
+                }}
+              >
+                {sections[sec.id]}
+              </div>
+            )}
+
+            {/* Content Area */}
+            {isExpanded && (
+              <div style={{ padding: "12px", background: "var(--surface)", flex: 1, display: "flex", flexDirection: "column" }}>
+                <textarea
+                  value={sections[sec.id]}
+                  onChange={(e) => updateSection(sec.id, e.target.value)}
+                  onBlur={handleBlur}
+                  placeholder="Type your notes here..."
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    padding: "4px",
+                    fontSize: "14px",
+                    lineHeight: 1.6,
+                    fontFamily: "var(--font-ui-zh, 'Noto Serif TC'), Georgia, serif",
+                    border: "none",
+                    background: "transparent",
+                    color: "var(--text-1)",
+                    resize: "none",
+                    outline: "none",
+                  }}
+                />
+              </div>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }
