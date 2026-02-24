@@ -92,15 +92,25 @@ export const PdfHighlighterView = memo(function PdfHighlighterView({ pdfDocument
     }, []);
 
     return (
-        <PdfHighlighter
-            pdfDocument={pdfDocument}
-            highlights={[]}
-            utilsRef={handleUtilsRef}
-            pdfScaleValue="page-width"
-            style={{ height: "100%", background: "var(--surface-2)" }}
-            textSelectionColor="rgba(47, 109, 224, 0.15)"
+        <div
+            style={{ height: "100%" }}
+            onPointerDownCapture={(e) => {
+                // Prevent PdfHighlighter from clearing text selection when user right-clicks to copy
+                if (e.button === 2) {
+                    e.stopPropagation();
+                }
+            }}
         >
-            {null}
-        </PdfHighlighter>
+            <PdfHighlighter
+                pdfDocument={pdfDocument}
+                highlights={[]}
+                utilsRef={handleUtilsRef}
+                pdfScaleValue="page-width"
+                style={{ height: "100%", background: "var(--surface-2)" }}
+                textSelectionColor="rgba(47, 109, 224, 0.15)"
+            >
+                {null}
+            </PdfHighlighter>
+        </div>
     );
 });
