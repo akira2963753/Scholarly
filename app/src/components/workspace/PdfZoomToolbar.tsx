@@ -15,9 +15,27 @@ function snapToStep(scale: number, direction: "up" | "down"): number {
     }
 }
 
-export function PdfZoomToolbar() {
+export function PdfZoomToolbar({ paperId }: { paperId: string }) {
     const pdfUtils = useWorkspaceStore((s) => s.pdfUtils);
     const [scale, setScale] = useState<number | null>(null);
+
+    // Restore saved scale on mount
+    useEffect(() => {
+        if (!pdfUtils) return;
+        const viewer = pdfUtils.getViewer();
+        if (!viewer) return;
+
+        try {
+            const savedScale = localStorage.getItem(`workspace_zoom_${paperId}`);
+            if (savedScale && savedScale !== "page-width") {
+                const num = parseFloat(savedScale);
+                if (!isNaN(num) && num >= MIN_SCALE && num <= MAX_SCALE) {
+                    viewer.currentScaleValue = savedScale;
+                    setScale(num);
+                }
+            }
+        } catch { }
+    }, [pdfUtils, paperId]);
 
     // Poll the viewer's current scale so the label stays accurate.
     useEffect(() => {
@@ -37,11 +55,16 @@ export function PdfZoomToolbar() {
         const clamped = Math.max(MIN_SCALE, Math.min(MAX_SCALE, newScale));
         viewer.currentScaleValue = String(clamped);
         setScale(clamped);
+        localStorage.setItem(`workspace_zoom_${paperId}`, String(clamped));
     };
 
     const zoomIn = () => scale !== null && setViewerScale(snapToStep(scale, "up"));
     const zoomOut = () => scale !== null && setViewerScale(snapToStep(scale, "down"));
-    const reset = () => { pdfUtils?.getViewer() && (pdfUtils!.getViewer()!.currentScaleValue = "page-width"); setScale(null); };
+    const reset = () => {
+        pdfUtils?.getViewer() && (pdfUtils!.getViewer()!.currentScaleValue = "page-width");
+        setScale(null);
+        localStorage.setItem(`workspace_zoom_${paperId}`, "page-width");
+    };
 
     const pct = scale !== null ? Math.round(scale * 100) : null;
     const atMin = scale !== null && scale <= MIN_SCALE;

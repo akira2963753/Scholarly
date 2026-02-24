@@ -10,6 +10,7 @@ import { useWorkspaceStore } from "@/stores/useWorkspaceStore";
 
 interface Props {
     pdfDocument: PDFDocumentProxy;
+    paperId: string;
 }
 
 /**
@@ -42,14 +43,14 @@ interface Props {
  * an effect), so we must never call setState inside it. We store utils in a
  * local ref and sync to Zustand via a separate useEffect.
  */
-export const PdfHighlighterView = memo(function PdfHighlighterView({ pdfDocument }: Props) {
+export const PdfHighlighterView = memo(function PdfHighlighterView({ pdfDocument, paperId }: Props) {
     const setPdfUtils = useWorkspaceStore((s) => s.setPdfUtils);
 
     // Holds the PdfHighlighterUtils — never written during render (no setState).
     const utilsRef = useRef<PdfHighlighterUtils | null>(null);
 
     // Saves the PDF scroll position across re-renders caused by highlight changes.
-    const savedScrollTop = useRef(0);
+    const savedScrollTop = useRef<number | null>(null);
 
     // utilsRef callback: store in local ref only (safe during render).
     // PdfHighlighter calls this during its own render, so we must NOT call
@@ -58,6 +59,39 @@ export const PdfHighlighterView = memo(function PdfHighlighterView({ pdfDocument
     const handleUtilsRef = (utils: PdfHighlighterUtils) => {
         utilsRef.current = utils;
     };
+
+    // Load initial scroll from localStorage on mount
+    useEffect(() => {
+        try {
+            const saved = localStorage.getItem(`workspace_scroll_${paperId}`);
+            if (saved) {
+                savedScrollTop.current = parseFloat(saved);
+            }
+        } catch { }
+
+        // Setup a listener to persist scroll on scroll end
+        const container = utilsRef.current?.getViewer()?.container as HTMLElement | undefined;
+        if (!container) return;
+
+        let scrollTimeout: ReturnType<typeof setTimeout>;
+        const onScroll = () => {
+            clearTimeout(scrollTimeout);
+            scrollTimeout = setTimeout(() => {
+                if (container) {
+                    localStorage.setItem(`workspace_scroll_${paperId}`, String(container.scrollTop));
+                    savedScrollTop.current = container.scrollTop;
+                }
+            }, 500); // 500ms debounce
+        };
+
+        container.addEventListener("scroll", onScroll, { passive: true });
+        return () => {
+            container.removeEventListener("scroll", onScroll);
+            clearTimeout(scrollTimeout);
+            // Save on unmount
+            if (container) localStorage.setItem(`workspace_scroll_${paperId}`, String(container.scrollTop));
+        };
+    }, [paperId]);
 
     // Sync utils into Zustand store after the render cycle completes (safe timing).
     useEffect(() => {
@@ -77,7 +111,7 @@ export const PdfHighlighterView = memo(function PdfHighlighterView({ pdfDocument
         // Step 3: restore the saved position (this runs after PdfHighlighter's effect)
         const viewer = utilsRef.current?.getViewer();
         const container = viewer?.container as HTMLElement | undefined;
-        if (container && savedScrollTop.current > 0) {
+        if (container && savedScrollTop.current !== null && savedScrollTop.current > 0) {
             container.scrollTop = savedScrollTop.current;
         }
 

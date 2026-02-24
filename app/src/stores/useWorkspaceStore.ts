@@ -26,12 +26,15 @@ interface WorkspaceStore {
   chatMessages: ChatMessage[];
   /** Gemini File API URI for the current paper's PDF */
   paperFileUri: string | null;
+  /** Whether the "PDF fully loaded" success message is visible */
+  aiContextLoadedVisible: boolean;
 
   // ── Actions ──────────────────────────────────────────────
   initWorkspace: (paperId: string, highlights: PaperHighlight[], notes: PaperNote[]) => void;
   setPdfUtils: (utils: PdfHighlighterUtils) => void;
   setChatMessages: (msgs: ChatMessage[]) => void;
   setPaperFileUri: (uri: string | null) => void;
+  setAiContextLoadedVisible: (visible: boolean) => void;
 
   addHighlight: (highlight: PaperHighlight) => void;
   deleteHighlight: (id: string) => void;
@@ -59,13 +62,15 @@ export const useWorkspaceStore = create<WorkspaceStore>()((set, get) => ({
   noteCardRefs: new Map(),
   chatMessages: [],
   paperFileUri: null,
+  aiContextLoadedVisible: false,
 
   initWorkspace: (paperId, highlights, notes) =>
-    set({ paperId, highlights, notes, pdfUtils: null, noteCardRefs: new Map(), chatMessages: [], paperFileUri: null }),
+    set({ paperId, highlights, notes, pdfUtils: null, noteCardRefs: new Map(), chatMessages: [], paperFileUri: null, aiContextLoadedVisible: false }),
 
   setPdfUtils: (utils) => set({ pdfUtils: utils }),
   setChatMessages: (msgs) => set({ chatMessages: msgs }),
   setPaperFileUri: (uri) => set({ paperFileUri: uri }),
+  setAiContextLoadedVisible: (visible) => set({ aiContextLoadedVisible: visible }),
 
   // ── Write-through: update runtime state + persist to annotation store ────
 

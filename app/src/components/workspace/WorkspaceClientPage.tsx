@@ -14,6 +14,11 @@ export function WorkspaceClientPage({ paperId }: { paperId: string }) {
   // Object.is comparison never triggers an infinite re-render loop.
   const highlights = useAnnotationStore((s) => s.byPaper[paperId]?.highlights ?? EMPTY_HIGHLIGHTS);
   const notes = useAnnotationStore((s) => s.byPaper[paperId]?.notes ?? EMPTY_NOTES);
+  const fetchAnnotations = useAnnotationStore((s) => s.fetchAnnotations);
+
+  useEffect(() => {
+    fetchAnnotations(paperId);
+  }, [paperId, fetchAnnotations]);
 
   useEffect(() => {
     if (paper === undefined) {

@@ -39,12 +39,21 @@ Answer questions about this paper concisely and accurately. If asked about somet
 export function AIChatPanel({ paper }: Props) {
   const geminiApiKey = useSettingsStore((s) => s.geminiApiKey);
   const highlights = useWorkspaceStore((s) => s.highlights);
-  const { chatMessages: messages, setChatMessages: setMessages, paperFileUri, setPaperFileUri } = useWorkspaceStore();
+  const { chatMessages: messages, setChatMessages: setMessages, paperFileUri, setPaperFileUri, aiContextLoadedVisible, setAiContextLoadedVisible } = useWorkspaceStore();
 
   const [uploadingPdf, setUploadingPdf] = useState(false);
   const [uploadError, setUploadError] = useState(false);
-  const [showSuccessBanner, setShowSuccessBanner] = useState(false);
   const uploadStartedRef = useRef(false);
+
+  // Auto-hide success banner after exactly 3s using global state
+  useEffect(() => {
+    if (aiContextLoadedVisible) {
+      const timer = setTimeout(() => {
+        setAiContextLoadedVisible(false);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [aiContextLoadedVisible, setAiContextLoadedVisible]);
 
   // Upload PDF to Gemini
   useEffect(() => {
@@ -74,10 +83,7 @@ export function AIChatPanel({ paper }: Props) {
         if (!isCancelled) {
           if (data.file && data.file.uri) {
             setPaperFileUri(data.file.uri);
-            setShowSuccessBanner(true);
-            setTimeout(() => {
-              if (!isCancelled) setShowSuccessBanner(false);
-            }, 4000);
+            setAiContextLoadedVisible(true);
           } else {
             console.error("Gemini Upload Error:", data);
             setUploadError(true);
@@ -95,7 +101,7 @@ export function AIChatPanel({ paper }: Props) {
     uploadPdf();
 
     return () => { isCancelled = true; };
-  }, [paper.filePath, geminiApiKey, paperFileUri, setPaperFileUri]);
+  }, [paper.filePath, geminiApiKey, paperFileUri, setPaperFileUri, setAiContextLoadedVisible]);
 
   useEffect(() => {
     if (messages.length === 0) {
@@ -271,7 +277,7 @@ export function AIChatPanel({ paper }: Props) {
           Failed to upload PDF for full-text context. The AI will only read your highlights.
         </div>
       )}
-      {showSuccessBanner && !uploadingPdf && !uploadError && (
+      {aiContextLoadedVisible && !uploadingPdf && !uploadError && (
         <div style={{ padding: "8px 16px", background: "rgba(20, 163, 83, 0.1)", color: "#14a353", fontSize: "12px", display: "flex", alignItems: "center", gap: "6px", borderBottom: "1px solid rgba(20, 163, 83, 0.2)" }}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
           <span style={{ fontWeight: 500 }}>PDF fully loaded into AI context</span>

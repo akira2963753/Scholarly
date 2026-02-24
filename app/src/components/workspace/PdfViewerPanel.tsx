@@ -10,9 +10,10 @@ import { PdfZoomToolbar } from "./PdfZoomToolbar";
 
 interface Props {
   pdfUrl: string;
+  paperId: string;
 }
 
-export function PdfViewerPanel({ pdfUrl }: Props) {
+export function PdfViewerPanel({ pdfUrl, paperId }: Props) {
   // Memoize the document object so PdfLoader's internal useEffect([document])
   // sees a stable reference even when parent components re-render.
   // Without this, adding a highlight causes WorkspaceClient to re-render,
@@ -94,8 +95,8 @@ export function PdfViewerPanel({ pdfUrl }: Props) {
       >
         {(pdfDocument) => (
           <div style={{ position: "relative", height: "100%", overflow: "hidden" }}>
-            <PdfHighlighterView pdfDocument={pdfDocument} />
-            <PdfZoomToolbar />
+            <PdfHighlighterView pdfDocument={pdfDocument} paperId={paperId} />
+            <PdfZoomToolbar paperId={paperId} />
           </div>
         )}
       </PdfLoader>

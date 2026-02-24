@@ -37,7 +37,8 @@ export function WorkspaceClient({ paper, highlights, notes }: Props) {
       />
       <div style={{ flex: 1, overflow: "hidden" }}>
         <ResizableSplitPane
-          left={<PdfViewerPanel pdfUrl={paper.filePath} />}
+          paperId={paper.id}
+          left={<PdfViewerPanel pdfUrl={paper.filePath} paperId={paper.id} />}
           right={<RightPanel paper={paper} activeTab={activeTab} onCollapse={() => setNotesOpen(false)} />}
           notesOpen={notesOpen}
           onOpenNotes={() => setNotesOpen(true)}
