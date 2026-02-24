@@ -43,6 +43,7 @@ export function AIChatPanel({ paper }: Props) {
 
   const [uploadingPdf, setUploadingPdf] = useState(false);
   const [uploadError, setUploadError] = useState(false);
+  const [showSuccessBanner, setShowSuccessBanner] = useState(false);
   const uploadStartedRef = useRef(false);
 
   // Upload PDF to Gemini
@@ -73,6 +74,10 @@ export function AIChatPanel({ paper }: Props) {
         if (!isCancelled) {
           if (data.file && data.file.uri) {
             setPaperFileUri(data.file.uri);
+            setShowSuccessBanner(true);
+            setTimeout(() => {
+              if (!isCancelled) setShowSuccessBanner(false);
+            }, 4000);
           } else {
             console.error("Gemini Upload Error:", data);
             setUploadError(true);
@@ -266,7 +271,7 @@ export function AIChatPanel({ paper }: Props) {
           Failed to upload PDF for full-text context. The AI will only read your highlights.
         </div>
       )}
-      {paperFileUri && !uploadingPdf && !uploadError && (
+      {showSuccessBanner && !uploadingPdf && !uploadError && (
         <div style={{ padding: "8px 16px", background: "rgba(20, 163, 83, 0.1)", color: "#14a353", fontSize: "12px", display: "flex", alignItems: "center", gap: "6px", borderBottom: "1px solid rgba(20, 163, 83, 0.2)" }}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
           <span style={{ fontWeight: 500 }}>PDF fully loaded into AI context</span>
