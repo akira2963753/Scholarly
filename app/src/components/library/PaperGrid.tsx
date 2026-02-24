@@ -16,6 +16,7 @@ export function PaperGrid() {
   const [editingFolderId, setEditingFolderId] = useState<string | null>(null);
   const [editingFolderName, setEditingFolderName] = useState("");
   const [viewMode, setViewMode] = useState<"grid" | "list">("list");
+  const [sortOrder, setSortOrder] = useState<"newest" | "oldest">("newest");
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   // Load data from DB when session is available
@@ -59,6 +60,14 @@ export function PaperGrid() {
       selectedTags.every((tag) => (p.tags ?? []).includes(tag));
 
     return matchesSearch && matchesTags;
+  });
+
+  const sortedPapers = [...filtered].sort((a, b) => {
+    if (sortOrder === "newest") {
+      return b.year - a.year;
+    } else {
+      return a.year - b.year;
+    }
   });
 
   const submitNewFolder = async () => {
@@ -317,6 +326,17 @@ export function PaperGrid() {
               />
             </div>
 
+            {/* Sort Toggle */}
+            <select
+              className="input"
+              value={sortOrder}
+              onChange={(e) => setSortOrder(e.target.value as "newest" | "oldest")}
+              style={{ width: "auto", padding: "5px 8px", fontSize: "13px", appearance: "auto", cursor: "pointer", border: "1px solid var(--border)", background: "var(--surface)" }}
+            >
+              <option value="newest">Newest First</option>
+              <option value="oldest">Oldest First</option>
+            </select>
+
             {/* View Toggle */}
             <div style={{ display: "flex", background: "var(--surface-2)", borderRadius: "var(--radius-md)", padding: "3px", border: "1px solid var(--border)" }}>
               <button
@@ -426,7 +446,7 @@ export function PaperGrid() {
               gap: viewMode === "grid" ? "16px" : "10px",
             }}
           >
-            {filtered.map((paper, i) => (
+            {sortedPapers.map((paper, i) => (
               <PaperCard key={paper.id} paper={paper} index={i + 1} viewMode={viewMode} />
             ))}
           </div>
