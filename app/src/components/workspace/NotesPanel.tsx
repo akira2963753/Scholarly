@@ -154,11 +154,11 @@ export function NotesPanel() {
               <div
                 style={{
                   padding: "0 16px 14px",
-                  fontSize: "12px",
+                  fontSize: "12.5px", // Slightly increased font size for better readability with more lines
                   color: "var(--text-3)",
                   lineHeight: 1.5,
                   display: "-webkit-box",
-                  WebkitLineClamp: 2,
+                  WebkitLineClamp: 5, // Increased to 5 lines
                   WebkitBoxOrient: "vertical",
                   overflow: "hidden",
                   textOverflow: "ellipsis",
