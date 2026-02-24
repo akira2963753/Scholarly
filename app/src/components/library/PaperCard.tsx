@@ -72,7 +72,7 @@ export function PaperCard({ paper, index, viewMode = "grid" }: { paper: PaperDat
           </div>
 
           <div style={{ display: "flex", gap: "12px", alignItems: "center", flexShrink: 0 }}>
-            <span className="badge" style={{ background: venueStyle.bg, color: venueStyle.text, fontSize: "13px" }}>{paper.year}</span>
+            <span className="badge" style={{ background: "var(--surface-2)", color: "var(--text-2)", fontSize: "13px", border: "1px solid var(--border)" }}>{paper.year}</span>
             <div style={{ display: "flex", gap: "6px", alignItems: "center", flexShrink: 0, borderLeft: "1px solid var(--border)", paddingLeft: "12px" }}>
               <Link href={`/workspace/${paper.id}`} className="btn btn-primary" style={{ fontSize: "14px", padding: "4px 10px" }}>
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -141,7 +141,7 @@ export function PaperCard({ paper, index, viewMode = "grid" }: { paper: PaperDat
             </select>
             <span
               className="badge"
-              style={{ background: venueStyle.bg, color: venueStyle.text, fontSize: "13px" }}
+              style={{ background: "var(--surface-2)", color: "var(--text-2)", fontSize: "13px", border: "1px solid var(--border)" }}
             >
               {paper.year}
             </span>
