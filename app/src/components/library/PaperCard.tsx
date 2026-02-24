@@ -74,20 +74,50 @@ export function PaperCard({ paper, index, viewMode = "grid" }: { paper: PaperDat
           <div style={{ display: "flex", gap: "12px", alignItems: "center", flexShrink: 0 }}>
             <span className="badge" style={{ background: "var(--surface-2)", color: "var(--text-2)", fontSize: "13px", border: "1px solid var(--border)" }}>{paper.year}</span>
             <div style={{ display: "flex", gap: "6px", alignItems: "center", flexShrink: 0, borderLeft: "1px solid var(--border)", paddingLeft: "12px" }}>
-              <Link href={`/workspace/${paper.id}`} className="btn btn-primary" style={{ fontSize: "14px", padding: "4px 10px" }}>
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z" />
-                  <circle cx="12" cy="12" r="3" />
+              {/* Open Button */}
+              <Link
+                href={`/workspace/${paper.id}`}
+                className="btn btn-primary"
+                style={{ padding: "6px", borderRadius: "6px", width: "32px", height: "32px", display: "flex", alignItems: "center", justifyContent: "center" }}
+                title="Open Workspace"
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                  <polyline points="15 3 21 3 21 9" />
+                  <line x1="10" y1="14" x2="21" y2="3" />
                 </svg>
-                Open
               </Link>
-              <button className="btn btn-ghost" style={{ fontSize: "14px", padding: "4px 8px" }} onClick={() => setShowEdit(true)}>
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+
+              {/* Edit Button */}
+              <button
+                className="btn btn-ghost"
+                style={{ padding: "6px", borderRadius: "6px", width: "32px", height: "32px", display: "flex", alignItems: "center", justifyContent: "center" }}
+                onClick={() => setShowEdit(true)}
+                title="Edit Details"
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                   <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
                   <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
                 </svg>
-                Edit
               </button>
+
+              {/* Download Button */}
+              <a
+                href={`/api/uploads/${paper.id}.pdf`}
+                download={`${paper.title}.pdf`}
+                className="btn btn-ghost"
+                style={{ padding: "6px", borderRadius: "6px", width: "32px", height: "32px", display: "flex", alignItems: "center", justifyContent: "center" }}
+                title="Download PDF"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="7 10 12 15 17 10" />
+                  <line x1="12" y1="15" x2="12" y2="3" />
+                </svg>
+              </a>
+
+              {/* Cite Button */}
               <CitationCopyButton paper={paper} index={index} />
             </div>
           </div>
@@ -181,21 +211,52 @@ export function PaperCard({ paper, index, viewMode = "grid" }: { paper: PaperDat
         )}
 
         {/* Actions row */}
-        <div style={{ display: "flex", gap: "8px", alignItems: "center", marginTop: "4px", flexWrap: "wrap" }}>
-          <Link href={`/workspace/${paper.id}`} className="btn btn-primary" style={{ fontSize: "14px", padding: "4px 12px" }}>
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z" />
-              <circle cx="12" cy="12" r="3" />
+        <div style={{ display: "flex", gap: "8px", alignItems: "center", marginTop: "4px", flexWrap: "wrap", justifyContent: "flex-end" }}>
+
+          {/* Open Button */}
+          <Link
+            href={`/workspace/${paper.id}`}
+            className="btn btn-primary"
+            style={{ padding: "6px", borderRadius: "6px", width: "32px", height: "32px", display: "flex", alignItems: "center", justifyContent: "center" }}
+            title="Open Workspace"
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+              <polyline points="15 3 21 3 21 9" />
+              <line x1="10" y1="14" x2="21" y2="3" />
             </svg>
-            Open
           </Link>
-          <button className="btn btn-ghost" style={{ fontSize: "14px", padding: "4px 10px" }} onClick={() => setShowEdit(true)}>
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+
+          {/* Edit Button */}
+          <button
+            className="btn btn-ghost"
+            style={{ padding: "6px", borderRadius: "6px", width: "32px", height: "32px", display: "flex", alignItems: "center", justifyContent: "center" }}
+            onClick={() => setShowEdit(true)}
+            title="Edit Details"
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
               <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
             </svg>
-            Edit
           </button>
+
+          {/* Download Button */}
+          <a
+            href={`/api/uploads/${paper.id}.pdf`}
+            download={`${paper.title}.pdf`}
+            className="btn btn-ghost"
+            style={{ padding: "6px", borderRadius: "6px", width: "32px", height: "32px", display: "flex", alignItems: "center", justifyContent: "center" }}
+            title="Download PDF"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+          </a>
+
+          {/* Cite Button */}
           <CitationCopyButton paper={paper} index={index} />
         </div>
       </div>
