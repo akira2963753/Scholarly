@@ -15,13 +15,11 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         if (!mounted) return;
 
         // Reset classes
-        document.documentElement.classList.remove("dark", "sepia");
+        document.documentElement.classList.remove("dark");
 
         // Apply new theme
         if (theme === "dark") {
             document.documentElement.classList.add("dark");
-        } else if (theme === "sepia") {
-            document.documentElement.classList.add("sepia");
         }
     }, [theme, mounted]);
 

@@ -232,7 +232,6 @@ export function SettingsModal({ onClose }: Props) {
             </p>
             <div style={{ display: "flex", gap: "12px" }}>
               <ThemeOption value="light" label="Light" current={theme} onSelect={setTheme} />
-              <ThemeOption value="sepia" label="Sepia" current={theme} onSelect={setTheme} />
               <ThemeOption value="dark" label="Dark" current={theme} onSelect={setTheme} />
             </div>
           </div>

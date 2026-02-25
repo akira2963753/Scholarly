@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-export type Theme = "light" | "sepia" | "dark";
+export type Theme = "light" | "dark";
 
 interface SettingsStore {
   geminiApiKey: string;

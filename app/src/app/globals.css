@@ -58,34 +58,6 @@
   --btn-primary-hover: var(--accent-hover);
 }
 
-/* ─── Sepia Mode Tokens ──────────────────────────────────── */
-.sepia {
-  --surface: #f9f7f3;
-  /* Warm white — barely tinted, not yellow */
-  --surface-2: #f0ede6;
-  /* Sidebar/Panel: warm off-white */
-  --surface-3: #e6e2da;
-  --surface-hover: #e9e5dd;
-  --border: #d6d1c8;
-  --border-strong: #c3bdb2;
-  --text-1: #2d2a26;
-  /* Near-black warm brown — stronger contrast */
-  --text-2: #6a6560;
-  --text-3: #9a9590;
-  --accent: #8c7245;
-  /* Warm amber-brown — scholarly, refined */
-  --accent-hover: #715a36;
-
-  /* Adjusted highlights for warm background */
-  --hl-yellow: rgba(210, 165, 60, 0.38);
-  --hl-red: rgba(210, 90, 80, 0.32);
-  --hl-blue: rgba(70, 130, 200, 0.32);
-
-  /* Button Tokens */
-  --btn-primary-bg: var(--text-1);
-  --btn-primary-text: var(--surface);
-  --btn-primary-hover: #1b1916;
-}
 
 /* ─── PDF Dark Mode Inversion ───────────────────────────── */
 /* Invert the canvas rendering the PDF so white paper becomes dark */
