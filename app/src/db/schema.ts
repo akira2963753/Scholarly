@@ -1,4 +1,4 @@
-import { pgTable, text, integer, timestamp, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, text, integer, timestamp, boolean, jsonb } from "drizzle-orm/pg-core";
 
 // ── Users ────────────────────────────────────────────────────────────────────
 
@@ -30,7 +30,7 @@ export const papers = pgTable("papers", {
   school: text("school"),
   year: integer("year").notNull(),
   venue: text("venue").notNull(),
-  tags: jsonb("tags").$type<string[]>().default([]).notNull(),
+  starred: boolean("starred").default(false).notNull(),
   filePath: text("file_path").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),

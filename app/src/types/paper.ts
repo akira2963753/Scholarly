@@ -11,7 +11,7 @@ export interface Paper {
   school: string | null;
   year: number;
   venue: string;
-  tags: string[];        // user-defined type / topic tags
+  starred?: boolean;     // whether the paper is starred/important
   filePath: string;      // e.g. "/uploads/uuid-filename.pdf"
   createdAt: string;     // ISO 8601
   updatedAt: string;

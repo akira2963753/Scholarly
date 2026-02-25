@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef } from "react";
 import { useLibraryStore } from "@/stores/useLibraryStore";
 import type { PaperData } from "@/stores/useLibraryStore";
 import { useSettingsStore } from "@/stores/useSettingsStore";
@@ -39,27 +39,6 @@ export function UploadModal({ onClose, mode = "add", initialPaper, initialFolder
     folderId: initialPaper?.folderId ?? initialFolderId ?? "",
   });
   const [errors, setErrors] = useState<Partial<FormData & { file: string }>>({});
-  const [tags, setTags] = useState<string[]>(initialPaper?.tags ?? []);
-  const [tagInput, setTagInput] = useState("");
-
-  const addTag = useCallback((raw: string) => {
-    const trimmed = raw.trim().toLowerCase();
-    if (trimmed && !tags.includes(trimmed)) {
-      setTags((prev) => [...prev, trimmed]);
-    }
-    setTagInput("");
-  }, [tags]);
-
-  const removeTag = (tag: string) => setTags((prev) => prev.filter((t) => t !== tag));
-
-  const handleTagKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter" || e.key === "," || e.key === "Tab") {
-      e.preventDefault();
-      addTag(tagInput);
-    } else if (e.key === "Backspace" && !tagInput && tags.length > 0) {
-      setTags((prev) => prev.slice(0, -1));
-    }
-  };
 
   const validate = () => {
     const e: Partial<FormData & { file: string }> = {};
@@ -208,7 +187,6 @@ Please return ONLY a valid JSON object with the following keys. If a value is no
           school: form.school.trim() || null,
           year: parseInt(form.year),
           venue: form.venue.trim(),
-          tags,
           folderId: form.folderId || undefined,
         });
         onClose();
@@ -225,7 +203,6 @@ Please return ONLY a valid JSON object with the following keys. If a value is no
           school: form.school.trim() || null,
           year: parseInt(form.year),
           venue: form.venue.trim(),
-          tags,
           folderId: form.folderId || null,
           filePath,
         };
@@ -391,79 +368,6 @@ Please return ONLY a valid JSON object with the following keys. If a value is no
           <style>{`
             @keyframes spin { to { transform: rotate(360deg); } }
     `}</style>
-
-          {/* Tags input */}
-          <div>
-            <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "var(--text-2)", marginBottom: "5px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-              Tags <span style={{ fontWeight: 400, color: "var(--text-3)", textTransform: "none", letterSpacing: 0 }}>(optional)</span>
-            </label>
-            <div
-              style={{
-                display: "flex",
-                flexWrap: "wrap",
-                gap: "6px",
-                padding: "7px 10px",
-                border: "1px solid var(--border)",
-                borderRadius: "var(--radius-sm)",
-                background: "var(--surface)",
-                cursor: "text",
-                minHeight: "38px",
-                alignItems: "center",
-              }}
-              onClick={() => document.getElementById("tag-input")?.focus()}
-            >
-              {tags.map((tag) => (
-                <span
-                  key={tag}
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: "4px",
-                    padding: "2px 8px",
-                    borderRadius: "999px",
-                    background: "#eef2ff",
-                    color: "#3730a3",
-                    fontSize: "12px",
-                    fontWeight: 500,
-                    lineHeight: 1.6,
-                  }}
-                >
-                  {tag.toUpperCase()}
-                  <button
-                    type="button"
-                    onClick={(e) => { e.stopPropagation(); removeTag(tag); }}
-                    style={{ background: "none", border: "none", padding: 0, cursor: "pointer", color: "#6366f1", display: "flex", alignItems: "center" }}
-                  >
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
-                      <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-                    </svg>
-                  </button>
-                </span>
-              ))}
-              <input
-                id="tag-input"
-                type="text"
-                value={tagInput}
-                onChange={(e) => setTagInput(e.target.value)}
-                onKeyDown={handleTagKeyDown}
-                onBlur={() => { if (tagInput.trim()) addTag(tagInput); }}
-                placeholder={tags.length === 0 ? "Type & press Enter to add (e.g. Quantization, Survey)" : ""}
-                style={{
-                  border: "none",
-                  outline: "none",
-                  flex: 1,
-                  minWidth: "140px",
-                  fontSize: "13px",
-                  color: "var(--text-1)",
-                  background: "transparent",
-                  padding: "1px 0",
-                }}
-              />
-            </div>
-            <p style={{ margin: "4px 0 0", fontSize: "11px", color: "var(--text-3)" }}>
-              Press <kbd style={{ background: "var(--surface-3)", padding: "0 4px", borderRadius: "3px", fontSize: "10px" }}>Enter</kbd> or <kbd style={{ background: "var(--surface-3)", padding: "0 4px", borderRadius: "3px", fontSize: "10px" }}>,</kbd> to add · <kbd style={{ background: "var(--surface-3)", padding: "0 4px", borderRadius: "3px", fontSize: "10px" }}>⌫</kbd> to remove last
-            </p>
-          </div>
 
           {/* Submit */}
           <div style={{ display: "flex", gap: "10px", justifyContent: "space-between", alignItems: "center", marginTop: "4px" }}>

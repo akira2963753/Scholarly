@@ -25,12 +25,13 @@ export function PaperCard({ paper, index, viewMode = "grid" }: { paper: PaperDat
   const { folders, updatePaper } = useLibraryStore();
   const venueStyle = getVenueStyle(paper.venue);
   const [showEdit, setShowEdit] = useState(false);
+  const [hovered, setHovered] = useState(false);
 
   if (viewMode === "list") {
     return (
       <>
         {showEdit && <UploadModal mode="edit" initialPaper={paper} onClose={() => setShowEdit(false)} />}
-        <div className="card" style={{ padding: "12px 16px", display: "flex", alignItems: "center", gap: "16px" }}>
+        <div className="card" style={{ padding: "12px 16px", display: "flex", alignItems: "center", gap: "16px" }} onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}>
 
           <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: "8px" }}>
 
@@ -57,16 +58,6 @@ export function PaperCard({ paper, index, viewMode = "grid" }: { paper: PaperDat
                 ))}
               </select>
 
-              {(paper.tags ?? []).length > 0 && (
-                <div style={{ display: "flex", gap: "4px", flexShrink: 0 }}>
-                  {(paper.tags ?? []).slice(0, 3).map((tag) => (
-                    <span key={tag} style={{ padding: "3px 10px", borderRadius: "12px", background: "var(--surface-3)", border: "1px solid var(--border)", color: "var(--text-1)", fontSize: "12px", fontWeight: 500 }}>
-                      {tag.toUpperCase()}
-                    </span>
-                  ))}
-                  {(paper.tags ?? []).length > 3 && <span style={{ fontSize: "12px", color: "var(--text-3)", alignSelf: "center", fontWeight: 600 }}>+{paper.tags!.length - 3}</span>}
-                </div>
-              )}
             </div>
 
           </div>
@@ -74,6 +65,16 @@ export function PaperCard({ paper, index, viewMode = "grid" }: { paper: PaperDat
           <div style={{ display: "flex", gap: "12px", alignItems: "center", flexShrink: 0 }}>
             <span className="badge" style={{ background: "var(--surface-2)", color: "var(--text-2)", fontSize: "13px", border: "1px solid var(--border)" }}>{paper.year}</span>
             <div style={{ display: "flex", gap: "6px", alignItems: "center", flexShrink: 0, borderLeft: "1px solid var(--border)", paddingLeft: "12px" }}>
+              {/* Star Button */}
+              <button
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); updatePaper(paper.id, { starred: !paper.starred }); }}
+                style={{ background: "none", border: "none", cursor: "pointer", padding: "6px", borderRadius: "6px", width: "32px", height: "32px", display: "flex", alignItems: "center", justifyContent: "center", color: paper.starred ? "#f59e0b" : "var(--text-3)", opacity: paper.starred || hovered ? 1 : 0, transition: "opacity 0.15s, color 0.15s" }}
+                title={paper.starred ? "Unstar" : "Star this paper"}
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill={paper.starred ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                </svg>
+              </button>
               {/* Open Button */}
               <Link
                 href={`/workspace/${paper.id}`}
@@ -128,7 +129,7 @@ export function PaperCard({ paper, index, viewMode = "grid" }: { paper: PaperDat
   return (
     <>
       {showEdit && <UploadModal mode="edit" initialPaper={paper} onClose={() => setShowEdit(false)} />}
-      <div className="card" style={{ padding: "20px", display: "flex", flexDirection: "column", gap: "12px" }}>
+      <div className="card" style={{ padding: "20px", display: "flex", flexDirection: "column", gap: "12px" }} onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}>
         {/* Title + venue badge row */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "12px" }}>
           <Link
@@ -146,6 +147,16 @@ export function PaperCard({ paper, index, viewMode = "grid" }: { paper: PaperDat
             {paper.title}
           </Link>
           <div style={{ display: "flex", gap: "8px", alignItems: "center", flexShrink: 0 }}>
+            {/* Star Button */}
+            <button
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); updatePaper(paper.id, { starred: !paper.starred }); }}
+              style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", display: "flex", alignItems: "center", justifyContent: "center", color: paper.starred ? "#f59e0b" : "var(--text-3)", opacity: paper.starred || hovered ? 1 : 0, transition: "opacity 0.15s, color 0.15s" }}
+              title={paper.starred ? "Unstar" : "Star this paper"}
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill={paper.starred ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+              </svg>
+            </button>
             <select
               value={paper.folderId || ""}
               onChange={(e) => updatePaper(paper.id, { folderId: e.target.value || null })}
@@ -185,29 +196,6 @@ export function PaperCard({ paper, index, viewMode = "grid" }: { paper: PaperDat
             <p style={{ fontSize: "12px", color: "var(--text-3)", margin: 0 }}>{paper.school}</p>
           )}
         </div>
-
-        {/* Tags */}
-        {(paper.tags ?? []).length > 0 && (
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "5px" }}>
-            {(paper.tags ?? []).map((tag) => (
-              <span
-                key={tag}
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  padding: "3px 11px",
-                  borderRadius: "999px",
-                  background: "#eef2ff",
-                  color: "#3730a3",
-                  fontSize: "13px",
-                  fontWeight: 500,
-                }}
-              >
-                {tag.toUpperCase()}
-              </span>
-            ))}
-          </div>
-        )}
 
         {/* Actions row */}
         <div style={{ display: "flex", gap: "8px", alignItems: "center", marginTop: "4px", flexWrap: "wrap", justifyContent: "flex-end" }}>
