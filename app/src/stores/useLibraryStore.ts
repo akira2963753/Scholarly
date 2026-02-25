@@ -20,7 +20,7 @@ export interface PaperData {
   school: string | null;
   year: number;
   venue: string;
-  starred?: boolean;
+  status?: "unread" | "reading" | "done";
   references?: Reference[] | null;
   filePath: string;
   createdAt: string;

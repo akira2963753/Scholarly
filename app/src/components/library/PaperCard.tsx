@@ -7,12 +7,25 @@ import { useLibraryStore } from "@/stores/useLibraryStore";
 import { CitationCopyButton } from "./CitationCopyButton";
 import { UploadModal } from "./UploadModal";
 
-const venueColors: Record<string, { bg: string; text: string }> = {
-  IEEE: { bg: "#e8f0fe", text: "#1a56db" },
-  ACL: { bg: "#fef3c7", text: "#92400e" },
-  NeurIPS: { bg: "#f3e8ff", text: "#6b21a8" },
-  ICML: { bg: "#dcfce7", text: "#14532d" },
-};
+type ReadStatus = "unread" | "reading" | "done";
+
+function cycleStatus(current?: string): ReadStatus {
+  if (!current || current === "unread") return "reading";
+  if (current === "reading") return "done";
+  return "unread";
+}
+
+function statusStyle(status?: string): React.CSSProperties {
+  if (status === "reading") return { background: "#dbeafe", color: "#1d4ed8", border: "1px solid #bfdbfe" };
+  if (status === "done") return { background: "#dcfce7", color: "#16a34a", border: "1px solid #bbf7d0" };
+  return { background: "var(--surface-2)", color: "var(--text-3)", border: "1px solid var(--border)" };
+}
+
+function statusLabel(status?: string): string {
+  if (status === "reading") return "Reading";
+  if (status === "done") return "Done";
+  return "Unread";
+}
 
 function truncateAuthors(authors: string, max = 3): string {
   const parts = authors.split(",").map((a) => a.trim()).filter(Boolean);
@@ -20,24 +33,16 @@ function truncateAuthors(authors: string, max = 3): string {
   return parts.slice(0, max).join(", ") + ", ...";
 }
 
-function getVenueStyle(venue: string) {
-  for (const [key, style] of Object.entries(venueColors)) {
-    if (venue.includes(key)) return style;
-  }
-  return { bg: "#f1f0ec", text: "#6b6863" };
-}
 
 export function PaperCard({ paper, index, viewMode = "grid" }: { paper: PaperData; index: number; viewMode?: "grid" | "list" }) {
   const { updatePaper } = useLibraryStore();
-  const venueStyle = getVenueStyle(paper.venue);
   const [showEdit, setShowEdit] = useState(false);
-  const [hovered, setHovered] = useState(false);
 
   if (viewMode === "list") {
     return (
       <>
         {showEdit && <UploadModal mode="edit" initialPaper={paper} onClose={() => setShowEdit(false)} />}
-        <div className="card" style={{ padding: "12px 16px", display: "flex", alignItems: "center", gap: "16px" }} onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}>
+        <div className="card" style={{ padding: "12px 16px", display: "flex", alignItems: "center", gap: "16px" }}>
 
           <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: "8px" }}>
 
@@ -52,22 +57,19 @@ export function PaperCard({ paper, index, viewMode = "grid" }: { paper: PaperDat
               </div>
             </div>
 
-
           </div>
 
           <div style={{ display: "flex", gap: "12px", alignItems: "center", flexShrink: 0 }}>
+            {/* Status Badge */}
+            <button
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); updatePaper(paper.id, { status: cycleStatus(paper.status) }); }}
+              style={{ ...statusStyle(paper.status), fontSize: "11px", fontWeight: 600, padding: "3px 8px", borderRadius: "12px", cursor: "pointer", letterSpacing: "0.02em", whiteSpace: "nowrap" }}
+              title="Click to change status"
+            >
+              {statusLabel(paper.status)}
+            </button>
             <span className="badge" style={{ background: "var(--surface-2)", color: "var(--text-2)", fontSize: "13px", border: "1px solid var(--border)" }}>{paper.year}</span>
             <div style={{ display: "flex", gap: "6px", alignItems: "center", flexShrink: 0, borderLeft: "1px solid var(--border)", paddingLeft: "12px" }}>
-              {/* Star Button */}
-              <button
-                onClick={(e) => { e.preventDefault(); e.stopPropagation(); updatePaper(paper.id, { starred: !paper.starred }); }}
-                style={{ background: "none", border: "none", cursor: "pointer", padding: "6px", borderRadius: "6px", width: "32px", height: "32px", display: "flex", alignItems: "center", justifyContent: "center", color: paper.starred ? "#f59e0b" : "var(--text-3)", opacity: paper.starred || hovered ? 1 : 0, transition: "opacity 0.15s, color 0.15s" }}
-                title={paper.starred ? "Unstar" : "Star this paper"}
-              >
-                <svg width="15" height="15" viewBox="0 0 24 24" fill={paper.starred ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                </svg>
-              </button>
               {/* Open Button */}
               <Link
                 href={`/workspace/${paper.id}`}
@@ -122,8 +124,8 @@ export function PaperCard({ paper, index, viewMode = "grid" }: { paper: PaperDat
   return (
     <>
       {showEdit && <UploadModal mode="edit" initialPaper={paper} onClose={() => setShowEdit(false)} />}
-      <div className="card" style={{ padding: "20px", display: "flex", flexDirection: "column", gap: "12px" }} onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}>
-        {/* Title + venue badge row */}
+      <div className="card" style={{ padding: "20px", display: "flex", flexDirection: "column", gap: "12px" }}>
+        {/* Title + status/year row */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "12px" }}>
           <Link
             href={`/workspace/${paper.id}`}
@@ -139,16 +141,14 @@ export function PaperCard({ paper, index, viewMode = "grid" }: { paper: PaperDat
           >
             {paper.title}
           </Link>
-          <div style={{ display: "flex", gap: "8px", alignItems: "center", flexShrink: 0 }}>
-            {/* Star Button */}
+          <div style={{ display: "flex", gap: "6px", alignItems: "center", flexShrink: 0 }}>
+            {/* Status Badge */}
             <button
-              onClick={(e) => { e.preventDefault(); e.stopPropagation(); updatePaper(paper.id, { starred: !paper.starred }); }}
-              style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", display: "flex", alignItems: "center", justifyContent: "center", color: paper.starred ? "#f59e0b" : "var(--text-3)", opacity: paper.starred || hovered ? 1 : 0, transition: "opacity 0.15s, color 0.15s" }}
-              title={paper.starred ? "Unstar" : "Star this paper"}
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); updatePaper(paper.id, { status: cycleStatus(paper.status) }); }}
+              style={{ ...statusStyle(paper.status), fontSize: "11px", fontWeight: 600, padding: "3px 8px", borderRadius: "12px", cursor: "pointer", letterSpacing: "0.02em", whiteSpace: "nowrap" }}
+              title="Click to change status"
             >
-              <svg width="15" height="15" viewBox="0 0 24 24" fill={paper.starred ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-              </svg>
+              {statusLabel(paper.status)}
             </button>
             <span
               className="badge"

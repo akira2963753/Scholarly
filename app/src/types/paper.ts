@@ -19,7 +19,7 @@ export interface Paper {
   school: string | null;
   year: number;
   venue: string;
-  starred?: boolean;     // whether the paper is starred/important
+  status?: "unread" | "reading" | "done";
   references?: Reference[] | null;
   filePath: string;      // e.g. "/uploads/uuid-filename.pdf"
   createdAt: string;     // ISO 8601

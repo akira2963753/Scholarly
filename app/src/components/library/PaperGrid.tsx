@@ -9,7 +9,7 @@ export function PaperGrid() {
   const { papers, folders, fetchAll, addFolder, removeFolder, updateFolder, loading } = useLibraryStore();
   const { data: session, status } = useSession();
   const [search, setSearch] = useState("");
-  const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null); // null = All Papers, "unassigned" = Unassigned, "starred" = Starred, otherwise folder ID
+  const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null); // null = All Papers, "unassigned" = Unassigned, "unread"/"reading"/"done" = status filter, otherwise folder ID
   const [isCreatingFolder, setIsCreatingFolder] = useState(false);
   const [newFolderName, setNewFolderName] = useState("");
   const [editingFolderId, setEditingFolderId] = useState<string | null>(null);
@@ -28,11 +28,15 @@ export function PaperGrid() {
     }
   }, [session, fetchAll]);
 
+  const statusFilters = ["unread", "reading", "done"];
+
   const filtered = papers.filter((p) => {
-    // 1. Folder / starred filter
+    // 1. Folder / status filter
     if (selectedFolderId === "unassigned" && p.folderId) return false;
-    if (selectedFolderId === "starred" && !p.starred) return false;
-    if (selectedFolderId && selectedFolderId !== "unassigned" && selectedFolderId !== "starred" && p.folderId !== selectedFolderId) return false;
+    if (selectedFolderId === "unread" && (p.status || "unread") !== "unread") return false;
+    if (selectedFolderId === "reading" && p.status !== "reading") return false;
+    if (selectedFolderId === "done" && p.status !== "done") return false;
+    if (selectedFolderId && !statusFilters.includes(selectedFolderId) && selectedFolderId !== "unassigned" && p.folderId !== selectedFolderId) return false;
 
     // 2. Search filter
     const q = search.toLowerCase();
@@ -130,15 +134,17 @@ export function PaperGrid() {
                 <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
               </svg>
             </button>
-            {/* Starred */}
-            <button
-              onClick={() => setSelectedFolderId("starred")}
-              style={iconBtnStyle(selectedFolderId === "starred")}
-              title="Starred"
-            >
-              <svg width="15" height="15" viewBox="0 0 24 24" fill={selectedFolderId === "starred" ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-              </svg>
+            {/* Unread */}
+            <button onClick={() => setSelectedFolderId("unread")} style={iconBtnStyle(selectedFolderId === "unread")} title="Unread">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /></svg>
+            </button>
+            {/* Reading */}
+            <button onClick={() => setSelectedFolderId("reading")} style={iconBtnStyle(selectedFolderId === "reading")} title="Reading">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+            </button>
+            {/* Done */}
+            <button onClick={() => setSelectedFolderId("done")} style={iconBtnStyle(selectedFolderId === "done")} title="Done">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
             </button>
             {/* Unassigned */}
             <button
@@ -192,23 +198,28 @@ export function PaperGrid() {
                 >
                   All Papers
                 </button>
-                <button
-                  onClick={() => setSelectedFolderId("starred")}
-                  style={{
-                    display: "flex", alignItems: "center", gap: "6px", width: "100%", padding: "8px", borderRadius: "6px",
-                    border: "none", background: selectedFolderId === "starred" ? "var(--surface-3)" : "transparent",
-                    color: selectedFolderId === "starred" ? "var(--text-1)" : "var(--text-2)",
-                    fontSize: "15px", fontWeight: selectedFolderId === "starred" ? 600 : 500, cursor: "pointer",
-                    textAlign: "left", transition: "background 0.1s"
-                  }}
-                  onMouseEnter={(e) => { if (selectedFolderId !== "starred") e.currentTarget.style.background = "var(--surface-2)" }}
-                  onMouseLeave={(e) => { if (selectedFolderId !== "starred") e.currentTarget.style.background = "transparent" }}
-                >
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill={selectedFolderId === "starred" ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.7, flexShrink: 0 }}>
-                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                  </svg>
-                  Starred
-                </button>
+                {(["unread", "reading", "done"] as const).map((s) => {
+                  const dotColor = s === "reading" ? "#1d4ed8" : s === "done" ? "#16a34a" : "var(--text-3)";
+                  const label = s === "unread" ? "Unread" : s === "reading" ? "Reading" : "Done";
+                  return (
+                    <button
+                      key={s}
+                      onClick={() => setSelectedFolderId(s)}
+                      style={{
+                        display: "flex", alignItems: "center", gap: "8px", width: "100%", padding: "8px", borderRadius: "6px",
+                        border: "none", background: selectedFolderId === s ? "var(--surface-3)" : "transparent",
+                        color: selectedFolderId === s ? "var(--text-1)" : "var(--text-2)",
+                        fontSize: "15px", fontWeight: selectedFolderId === s ? 600 : 500, cursor: "pointer",
+                        textAlign: "left", transition: "background 0.1s"
+                      }}
+                      onMouseEnter={(e) => { if (selectedFolderId !== s) e.currentTarget.style.background = "var(--surface-2)"; }}
+                      onMouseLeave={(e) => { if (selectedFolderId !== s) e.currentTarget.style.background = "transparent"; }}
+                    >
+                      <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: dotColor, flexShrink: 0, opacity: selectedFolderId === s ? 1 : 0.6 }} />
+                      {label}
+                    </button>
+                  );
+                })}
                 <button
                   onClick={() => setSelectedFolderId("unassigned")}
                   style={{
