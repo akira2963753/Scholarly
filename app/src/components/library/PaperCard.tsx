@@ -14,6 +14,12 @@ const venueColors: Record<string, { bg: string; text: string }> = {
   ICML: { bg: "#dcfce7", text: "#14532d" },
 };
 
+function truncateAuthors(authors: string, max = 3): string {
+  const parts = authors.split(",").map((a) => a.trim()).filter(Boolean);
+  if (parts.length <= max) return authors;
+  return parts.slice(0, max).join(", ") + ", ...";
+}
+
 function getVenueStyle(venue: string) {
   for (const [key, style] of Object.entries(venueColors)) {
     if (venue.includes(key)) return style;
@@ -22,7 +28,7 @@ function getVenueStyle(venue: string) {
 }
 
 export function PaperCard({ paper, index, viewMode = "grid" }: { paper: PaperData; index: number; viewMode?: "grid" | "list" }) {
-  const { folders, updatePaper } = useLibraryStore();
+  const { updatePaper } = useLibraryStore();
   const venueStyle = getVenueStyle(paper.venue);
   const [showEdit, setShowEdit] = useState(false);
   const [hovered, setHovered] = useState(false);
@@ -40,25 +46,12 @@ export function PaperCard({ paper, index, viewMode = "grid" }: { paper: PaperDat
                 {paper.title}
               </Link>
               <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "12.5px", color: "var(--text-2)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                <span style={{ fontWeight: 500 }}>{paper.author}</span>
+                <span style={{ fontWeight: 500 }}>{truncateAuthors(paper.author)}</span>
                 <span style={{ color: "var(--border-strong)" }}>|</span>
                 <span style={{ color: "var(--text-3)" }}>{paper.venue}</span>
               </div>
             </div>
 
-            <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
-              <select
-                value={paper.folderId || ""}
-                onChange={(e) => updatePaper(paper.id, { folderId: e.target.value || null })}
-                style={{ fontSize: "12px", padding: "3px 8px", borderRadius: "12px", border: "1px solid var(--border)", background: "var(--surface-2)", color: "var(--text-3)", outline: "none", cursor: "pointer", maxWidth: "120px", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
-              >
-                <option value="">No Folder</option>
-                {folders.map(f => (
-                  <option key={f.id} value={f.id}>{f.name}</option>
-                ))}
-              </select>
-
-            </div>
 
           </div>
 
@@ -157,28 +150,6 @@ export function PaperCard({ paper, index, viewMode = "grid" }: { paper: PaperDat
                 <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
               </svg>
             </button>
-            <select
-              value={paper.folderId || ""}
-              onChange={(e) => updatePaper(paper.id, { folderId: e.target.value || null })}
-              style={{
-                fontSize: "13px",
-                padding: "4px 8px",
-                borderRadius: "4px",
-                border: "1px solid var(--border)",
-                background: "var(--surface-2)",
-                color: "var(--text-3)",
-                outline: "none",
-                cursor: "pointer",
-                maxWidth: "100px",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap"
-              }}
-            >
-              <option value="">No Folder</option>
-              {folders.map(f => (
-                <option key={f.id} value={f.id}>{f.name}</option>
-              ))}
-            </select>
             <span
               className="badge"
               style={{ background: "var(--surface-2)", color: "var(--text-2)", fontSize: "13px", border: "1px solid var(--border)" }}
@@ -190,7 +161,7 @@ export function PaperCard({ paper, index, viewMode = "grid" }: { paper: PaperDat
 
         {/* Author & venue */}
         <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-          <p style={{ fontSize: "13px", color: "var(--text-2)", margin: 0 }}>{paper.author}</p>
+          <p style={{ fontSize: "13px", color: "var(--text-2)", margin: 0 }}>{truncateAuthors(paper.author)}</p>
           <p style={{ fontSize: "12px", color: "var(--text-3)", margin: 0 }}>{paper.venue}</p>
           {paper.school && (
             <p style={{ fontSize: "12px", color: "var(--text-3)", margin: 0 }}>{paper.school}</p>
