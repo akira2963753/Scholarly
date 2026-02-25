@@ -4,6 +4,14 @@ export interface Folder {
   createdAt: string;
 }
 
+export interface Reference {
+  index: number;
+  authors: string;
+  title: string;
+  venue: string;
+  year: string;
+}
+
 export interface Paper {
   id: string;
   title: string;
@@ -12,6 +20,7 @@ export interface Paper {
   year: number;
   venue: string;
   starred?: boolean;     // whether the paper is starred/important
+  references?: Reference[] | null;
   filePath: string;      // e.g. "/uploads/uuid-filename.pdf"
   createdAt: string;     // ISO 8601
   updatedAt: string;

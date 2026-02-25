@@ -31,6 +31,7 @@ export const papers = pgTable("papers", {
   year: integer("year").notNull(),
   venue: text("venue").notNull(),
   starred: boolean("starred").default(false).notNull(),
+  references: jsonb("references"),
   filePath: text("file_path").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),

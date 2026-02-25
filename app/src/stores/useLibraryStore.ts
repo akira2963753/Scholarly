@@ -1,6 +1,7 @@
 "use client";
 
 import { create } from "zustand";
+import type { Reference } from "@/types/paper";
 
 // Frontend-serialized types (dates are strings after JSON serialization from the API)
 export interface FolderData {
@@ -20,6 +21,7 @@ export interface PaperData {
   year: number;
   venue: string;
   starred?: boolean;
+  references?: Reference[] | null;
   filePath: string;
   createdAt: string;
   updatedAt: string;

@@ -2,9 +2,10 @@
 
 import { NotesPanel } from "./NotesPanel";
 import { AIChatPanel } from "./AIChatPanel";
+import { ReferencesPanel } from "./ReferencesPanel";
 import type { Paper } from "@/types/paper";
 
-type Tab = "notes" | "chat";
+type Tab = "notes" | "chat" | "references";
 
 interface Props {
   paper: Paper;
@@ -19,6 +20,8 @@ export function RightPanel({ paper, activeTab, onCollapse }: Props) {
       <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
         {activeTab === "notes" ? (
           <NotesPanel />
+        ) : activeTab === "references" ? (
+          <ReferencesPanel paper={paper} />
         ) : (
           <AIChatPanel paper={paper} />
         )}
