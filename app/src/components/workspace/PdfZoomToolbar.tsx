@@ -37,6 +37,36 @@ export function PdfZoomToolbar({ paperId }: { paperId: string }) {
         } catch { }
     }, [pdfUtils, paperId]);
 
+    // Intercept trackpad pinch-to-zoom (Ctrl+wheel) and redirect to PDF.js
+    // so pages are re-rendered at the correct resolution instead of blurry CSS scaling.
+    useEffect(() => {
+        if (!pdfUtils) return;
+        const viewer = pdfUtils.getViewer();
+        const container = viewer?.container as HTMLElement | undefined;
+        if (!container) return;
+
+        const handleWheel = (e: WheelEvent) => {
+            if (!e.ctrlKey) return;
+            e.preventDefault();
+
+            const currentViewer = pdfUtils.getViewer();
+            if (!currentViewer) return;
+
+            const currentScale = currentViewer.currentScale;
+            // deltaMode 1 = line mode (mouse wheel); convert to pixels
+            const delta = e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY;
+            // Exponential scaling: negative delta = zoom in, positive = zoom out
+            const newScale = Math.max(MIN_SCALE, Math.min(MAX_SCALE, currentScale * Math.pow(0.999, delta)));
+
+            currentViewer.currentScaleValue = String(newScale);
+            setScale(newScale);
+            localStorage.setItem(`workspace_zoom_${paperId}`, String(newScale));
+        };
+
+        container.addEventListener("wheel", handleWheel, { passive: false });
+        return () => container.removeEventListener("wheel", handleWheel);
+    }, [pdfUtils, paperId]);
+
     // Poll the viewer's current scale so the label stays accurate.
     useEffect(() => {
         if (!pdfUtils) return;
