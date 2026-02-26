@@ -9,7 +9,7 @@ export function PaperGrid() {
   const { papers, folders, fetchAll, addFolder, removeFolder, updateFolder, loading } = useLibraryStore();
   const { data: session, status } = useSession();
   const [search, setSearch] = useState("");
-  const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null); // null = All Papers, "unassigned" = Unassigned, "unread"/"reading"/"done" = status filter, otherwise folder ID
+  const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null); // null = All Papers, "unread"/"reading"/"done" = status filter, otherwise folder ID
   const [isCreatingFolder, setIsCreatingFolder] = useState(false);
   const [newFolderName, setNewFolderName] = useState("");
   const [editingFolderId, setEditingFolderId] = useState<string | null>(null);
@@ -32,11 +32,10 @@ export function PaperGrid() {
 
   const filtered = papers.filter((p) => {
     // 1. Folder / status filter
-    if (selectedFolderId === "unassigned" && p.folderId) return false;
     if (selectedFolderId === "unread" && (p.status || "unread") !== "unread") return false;
     if (selectedFolderId === "reading" && p.status !== "reading") return false;
     if (selectedFolderId === "done" && p.status !== "done") return false;
-    if (selectedFolderId && !statusFilters.includes(selectedFolderId) && selectedFolderId !== "unassigned" && p.folderId !== selectedFolderId) return false;
+    if (selectedFolderId && !statusFilters.includes(selectedFolderId) && p.folderId !== selectedFolderId) return false;
 
     // 2. Search filter
     const q = search.toLowerCase();
@@ -146,18 +145,6 @@ export function PaperGrid() {
             <button onClick={() => setSelectedFolderId("done")} style={iconBtnStyle(selectedFolderId === "done")} title="Done">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
             </button>
-            {/* Unassigned */}
-            <button
-              onClick={() => setSelectedFolderId("unassigned")}
-              style={iconBtnStyle(selectedFolderId === "unassigned")}
-              title="Unassigned"
-            >
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-                <line x1="3" y1="9" x2="21" y2="9" />
-                <line x1="3" y1="15" x2="21" y2="15" />
-              </svg>
-            </button>
             {/* Divider */}
             <div style={{ height: "1px", width: "24px", background: "var(--border)", margin: "4px 0" }} />
             {/* Folder icons */}
@@ -220,20 +207,6 @@ export function PaperGrid() {
                     </button>
                   );
                 })}
-                <button
-                  onClick={() => setSelectedFolderId("unassigned")}
-                  style={{
-                    display: "flex", alignItems: "center", width: "100%", padding: "8px", borderRadius: "6px",
-                    border: "none", background: selectedFolderId === "unassigned" ? "var(--surface-3)" : "transparent",
-                    color: selectedFolderId === "unassigned" ? "var(--text-1)" : "var(--text-2)",
-                    fontSize: "15px", fontWeight: selectedFolderId === "unassigned" ? 600 : 500, cursor: "pointer",
-                    textAlign: "left", transition: "background 0.1s"
-                  }}
-                  onMouseEnter={(e) => { if (selectedFolderId !== "unassigned") e.currentTarget.style.background = "var(--surface-2)" }}
-                  onMouseLeave={(e) => { if (selectedFolderId !== "unassigned") e.currentTarget.style.background = "transparent" }}
-                >
-                  Unassigned
-                </button>
               </div>
             </div>
 
