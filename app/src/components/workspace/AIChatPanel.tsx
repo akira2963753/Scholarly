@@ -264,7 +264,7 @@ export function AIChatPanel({ paper }: Props) {
   }
 
   return (
-    <div style={{ height: "100%", display: "flex", flexDirection: "column" }}>
+    <div style={{ height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
       {/* Status Banners */}
       {uploadingPdf && (
         <div style={{ padding: "8px 16px", background: "var(--surface-2)", color: "var(--text-3)", fontSize: "12px", display: "flex", alignItems: "center", gap: "8px", borderBottom: "1px solid var(--border)" }}>
@@ -285,7 +285,7 @@ export function AIChatPanel({ paper }: Props) {
       )}
 
       {/* Message list */}
-      <div style={{ flex: 1, overflowY: "auto", padding: "16px", display: "flex", flexDirection: "column", gap: "12px" }}>
+      <div style={{ flex: 1, minHeight: 0, overflowY: "auto", padding: "16px", display: "flex", flexDirection: "column", gap: "12px" }}>
         {messages.map((msg, i) => (
           <MessageBubble key={i} message={msg} />
         ))}
