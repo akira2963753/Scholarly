@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { Allotment } from "allotment";
 import "allotment/dist/style.css";
 import type { ReactNode } from "react";
@@ -13,32 +12,9 @@ interface Props {
   onOpenNotes: () => void;
 }
 
-export function AllotmentLayout({ paperId, left, right, notesOpen, onOpenNotes }: Props) {
-  const [ready, setReady] = useState(false);
-  const [sizes, setSizes] = useState<number[]>([60, 40]);
-
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem(`workspace_sizes_${paperId}`);
-      if (saved) {
-        setSizes(JSON.parse(saved));
-      }
-    } catch {
-      // fallback to [60, 40]
-    }
-    setReady(true);
-  }, [paperId]);
-
-  const handleDragEnd = (newSizes: number[]) => {
-    localStorage.setItem(`workspace_sizes_${paperId}`, JSON.stringify(newSizes));
-  };
-
-  if (!ready) {
-    return <div style={{ height: "100%", background: "var(--surface-2)" }} />;
-  }
-
+export function AllotmentLayout({ paperId: _paperId, left, right, notesOpen, onOpenNotes }: Props) {
   return (
-    <Allotment defaultSizes={sizes} onChange={handleDragEnd} separator={false} className="workspace-split">
+    <Allotment defaultSizes={[60, 40]} separator={false} className="workspace-split">
       <Allotment.Pane minSize={360}>
         <div style={{ height: "100%", overflow: "hidden", background: "var(--surface-2)", position: "relative" }}>
           {left}

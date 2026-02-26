@@ -19,7 +19,7 @@ interface Props {
 export function WorkspaceClient({ paper, highlights, notes }: Props) {
   const initWorkspace = useWorkspaceStore((s) => s.initWorkspace);
   const setAnnotations = useWorkspaceStore((s) => s.setAnnotations);
-  const [notesOpen, setNotesOpen] = useState(true);
+  const [notesOpen, setNotesOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<"notes" | "chat" | "references">("notes");
 
   // Initialise workspace state when paper changes
