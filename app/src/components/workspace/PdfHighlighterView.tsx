@@ -52,6 +52,7 @@ export const PdfHighlighterView = memo(function PdfHighlighterView({ pdfDocument
 
     // Holds the PdfHighlighterUtils — never written during render (no setState).
     const utilsRef = useRef<PdfHighlighterUtils | null>(null);
+    const utilsSynced = useRef(false);
 
     // Saves the PDF scroll position across re-renders caused by highlight changes.
     const savedScrollTop = useRef<number | null>(null);
@@ -97,10 +98,12 @@ export const PdfHighlighterView = memo(function PdfHighlighterView({ pdfDocument
         };
     }, [paperId]);
 
-    // Sync utils into Zustand store after the render cycle completes (safe timing).
-    // Only update when the reference actually changes to avoid infinite re-render loops.
+    // Sync utils into Zustand store once after PdfHighlighter provides them.
+    // PdfHighlighter creates a new utils object on every render, so we only
+    // sync the first one to avoid an infinite re-render loop.
     useEffect(() => {
-        if (utilsRef.current && utilsRef.current !== useWorkspaceStore.getState().pdfUtils) {
+        if (utilsRef.current && !utilsSynced.current) {
+            utilsSynced.current = true;
             setPdfUtils(utilsRef.current);
         }
     });
