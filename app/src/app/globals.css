@@ -324,7 +324,7 @@ body {
 
 /* SVG text layer selection colour */
 .svg-text-overlay text::selection {
-  background-color: rgba(47, 109, 224, 0.04);
+  background-color: rgba(47, 109, 224, 0.065);
 }
 
 /* Pan mode — disable text selection, show grab cursor */
