@@ -8,6 +8,7 @@ import {
 } from "react-pdf-highlighter-extended";
 import { useWorkspaceStore } from "@/stores/useWorkspaceStore";
 import { usePanMode } from "@/hooks/usePanMode";
+import { useTextLayerFix } from "@/hooks/useTextLayerFix";
 
 interface Props {
     pdfDocument: PDFDocumentProxy;
@@ -49,6 +50,7 @@ export const PdfHighlighterView = memo(function PdfHighlighterView({ pdfDocument
     const pdfInteractionMode = useWorkspaceStore((s) => s.pdfInteractionMode);
 
     usePanMode();
+    useTextLayerFix();
 
     // Holds the PdfHighlighterUtils — never written during render (no setState).
     const utilsRef = useRef<PdfHighlighterUtils | null>(null);

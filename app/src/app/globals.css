@@ -293,14 +293,6 @@ body {
   display: none;
 }
 
-/* Fix for multi-column PDFs and blocky highlights: 
-   force text layer spans to shrink-wrap so browser native ::selection shapes 
-   perfectly around the text instead of filling the full column width. */
-.textLayer span {
-  width: max-content !important;
-  min-width: min-content !important;
-}
-
 /* Make multi-line highlights appear as distinct marker strips instead of solid blocks.
    padding-top/bottom + background-clip gives a fixed pixel inset that remains visible
    even for small text, whereas scaleY(%) created gaps too small to see on dense PDFs. */
@@ -310,7 +302,6 @@ body {
   padding-bottom: 2px !important;
   background-clip: content-box !important;
   border-radius: 3px !important;
-  /* Allow clicking and dragging *through* the highlight */
 }
 
 /* Ensure the text layer is explicitly selectable, overriding any library defaults */
@@ -320,8 +311,6 @@ body {
 }
 
 .textLayer span {
-  width: max-content !important;
-  min-width: min-content !important;
   user-select: text !important;
   -webkit-user-select: text !important;
 }
