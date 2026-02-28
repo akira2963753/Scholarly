@@ -322,6 +322,11 @@ body {
   pointer-events: auto !important;
 }
 
+/* SVG text layer selection colour */
+.svg-text-overlay text::selection {
+  background-color: rgba(47, 109, 224, 0.08);
+}
+
 /* Pan mode — disable text selection, show grab cursor */
 .pdf-pan-mode .textLayer {
   user-select: none !important;
@@ -332,6 +337,11 @@ body {
 .pdf-pan-mode .textLayer span {
   user-select: none !important;
   -webkit-user-select: none !important;
+}
+
+.pdf-pan-mode .svg-text-overlay {
+  pointer-events: none !important;
+  user-select: none !important;
 }
 
 .pdf-pan-mode .PdfHighlighter {
