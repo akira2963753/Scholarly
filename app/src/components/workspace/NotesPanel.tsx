@@ -113,7 +113,7 @@ export function NotesPanel() {
         const isExpanded = expandedId === sec.id;
         const hasContent = sections[sec.id].trim().length > 0;
 
-        // Peak focus mode: If a card is expanded, hide all the other cards completely
+        // Focus mode: If a card is expanded, hide all the other cards completely
         if (expandedId && !isExpanded) return null;
 
         return (
@@ -126,7 +126,6 @@ export function NotesPanel() {
               overflow: "hidden",
               transition: "all 0.2s ease",
               boxShadow: isExpanded ? "0 4px 12px rgba(0,0,0,0.05)" : "none",
-              // Critical: Let the focused card fill all available vertical space!
               display: "flex",
               flexDirection: "column",
               flex: isExpanded ? 1 : "none",

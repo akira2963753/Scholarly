@@ -308,7 +308,7 @@ export function ReferencesPanel({ paper }: Props) {
                     padding: "10px 12px",
                     borderRadius: "6px",
                     background: "var(--surface)",
-                    border: ref.starred ? "1px solid var(--accent)" : "1px solid var(--border)",
+                    border: ref.starred ? "1px solid #f59f00" : "1px solid var(--border)",
                     display: "flex",
                     gap: "10px",
                   }}
