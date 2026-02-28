@@ -1,11 +1,18 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import dynamic from "next/dynamic";
 import { useWorkspaceStore } from "@/stores/useWorkspaceStore";
 import { ResizableSplitPane } from "./ResizableSplitPane";
 import { WorkspaceHeader } from "./WorkspaceHeader";
-import { PdfViewerPanel } from "./PdfViewerPanel";
 import { RightPanel } from "./RightPanel";
+
+// Dynamically import PdfViewerPanel to avoid SSR issues with
+// react-pdf-highlighter-extended / pdfjs-dist accessing `document` at module level.
+const PdfViewerPanel = dynamic(
+  () => import("./PdfViewerPanel").then((m) => m.PdfViewerPanel),
+  { ssr: false }
+);
 import type { Paper } from "@/types/paper";
 import type { PaperHighlight } from "@/types/highlight";
 import type { PaperNote } from "@/types/note";
