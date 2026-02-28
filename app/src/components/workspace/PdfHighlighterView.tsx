@@ -115,6 +115,10 @@ export const PdfHighlighterView = memo(function PdfHighlighterView({ pdfDocument
     // The cleanup runs BEFORE PdfHighlighter's new layout effect, so we can
     // capture the current scrollTop there. After PdfHighlighter's effect has
     // reset the scroll, our effect body runs and restores it.
+    //
+    // Deps include pdfInteractionMode so that switching pan/select mode also
+    // saves & restores scroll (the className change triggers PdfHighlighter's
+    // ResizeObserver which resets scroll).
     useLayoutEffect(() => {
         // Step 3: restore the saved position (this runs after PdfHighlighter's effect)
         const viewer = utilsRef.current?.getViewer();
@@ -131,7 +135,7 @@ export const PdfHighlighterView = memo(function PdfHighlighterView({ pdfDocument
                 savedScrollTop.current = container.scrollTop;
             }
         };
-    }, []);
+    }, [pdfInteractionMode]);
 
     return (
         <div
