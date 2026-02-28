@@ -4,15 +4,15 @@ import { useEffect, useState, useCallback } from "react";
 import { useWorkspaceStore } from "@/stores/useWorkspaceStore";
 
 const SECTIONS = [
-  { id: "summary", title: "📝 Summary" },
-  { id: "problem", title: "🎯 Problem Statement" },
-  { id: "contributions", title: "✨ Key Contributions" },
-  { id: "takeaways", title: "💡 My Takeaways" },
+  { id: "introduction", title: "Introduction / Background" },
+  { id: "contribution", title: "Contribution" },
+  { id: "experiment", title: "Experiment Results" },
+  { id: "summary", title: "Summary" },
 ];
 
 function parseNoteToSections(rawText: string) {
-  const result: Record<string, string> = { summary: "", problem: "", contributions: "", takeaways: "" };
-  let currentKey = "summary";
+  const result: Record<string, string> = { introduction: "", contribution: "", experiment: "", summary: "" };
+  let currentKey = "introduction";
 
   const lines = rawText.split("\n");
   const buffer: string[] = [];
@@ -30,7 +30,7 @@ function parseNoteToSections(rawText: string) {
   if (buffer.length > 0) result[currentKey] = buffer.join("\n").trim();
 
   // Clean up initial preamble if empty
-  if (!rawText.includes("### 📝 One-Sentence Summary") && result.summary === rawText.trim()) {
+  if (!rawText.includes("### Introduction / Background") && result.introduction === rawText.trim()) {
     // Legacy mode: everything is in summary if no headers exist
   }
 
