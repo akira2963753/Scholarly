@@ -13,6 +13,11 @@ import { useEffect } from "react";
  * This hook observes the text layer and caps scaleX at 1.0 for each span.
  * Since the text is invisible (color: transparent), the slight narrowing
  * is imperceptible, but it prevents selection highlights from overflowing.
+ *
+ * Timing: PDF.js adds spans to the DOM first, then sets transforms in a
+ * separate layout pass. We use both:
+ *   1. requestAnimationFrame delay after childList mutations (new pages)
+ *   2. style attribute mutation observer (catches transform being set)
  */
 export function useTextLayerFix() {
     useEffect(() => {
@@ -23,16 +28,12 @@ export function useTextLayerFix() {
             const transform = span.style.transform;
             if (!transform) return;
 
-            // Match scaleX(value) — PDF.js uses this to stretch text
             const match = transform.match(/scaleX\(([\d.]+)\)/);
             if (!match) return;
 
             const scaleX = parseFloat(match[1]);
-            // Only fix when text is being stretched (scaleX > 1).
-            // When compressed (scaleX < 1), leave as-is — it won't bleed.
             if (scaleX <= 1.0) return;
 
-            // Remove the scaleX part, keep other transforms (rotation, minFontSize scale, etc.)
             const fixed = transform.replace(/scaleX\([\d.]+\)\s*/, "").trim();
             span.style.transform = fixed || "none";
         };
@@ -41,24 +42,56 @@ export function useTextLayerFix() {
             el.querySelectorAll<HTMLElement>("span").forEach(fixSpan);
         };
 
-        // Process any already-rendered text layers
-        container.querySelectorAll(".textLayer").forEach(processTextLayer);
+        // Process any already-rendered text layers (with delay for transforms)
+        requestAnimationFrame(() => {
+            container.querySelectorAll(".textLayer").forEach(processTextLayer);
+        });
 
-        // Watch for new pages being rendered (PDF.js renders pages on-demand as user scrolls)
+        // Watch for both:
+        // - childList: new pages/text layers being added
+        // - attributes (style): PDF.js setting transforms on existing spans
         const observer = new MutationObserver((mutations) => {
+            const textLayersToProcess = new Set<Element>();
+
             for (const mutation of mutations) {
-                for (const node of mutation.addedNodes) {
-                    if (!(node instanceof HTMLElement)) continue;
-                    if (node.classList.contains("textLayer")) {
-                        processTextLayer(node);
+                // New nodes added (new pages rendered)
+                if (mutation.type === "childList") {
+                    for (const node of mutation.addedNodes) {
+                        if (!(node instanceof HTMLElement)) continue;
+                        if (node.classList.contains("textLayer")) {
+                            textLayersToProcess.add(node);
+                        }
+                        node.querySelectorAll?.(".textLayer").forEach((tl) =>
+                            textLayersToProcess.add(tl)
+                        );
                     }
-                    // Also check children — pages wrap the textLayer
-                    node.querySelectorAll?.(".textLayer").forEach(processTextLayer);
                 }
+
+                // Style attribute changed on a span (PDF.js setting transform)
+                if (mutation.type === "attributes" && mutation.target instanceof HTMLElement) {
+                    const target = mutation.target;
+                    // Only process spans inside textLayer
+                    if (target.tagName === "SPAN" && target.closest(".textLayer")) {
+                        fixSpan(target);
+                    }
+                }
+            }
+
+            // Process newly added text layers after PDF.js finishes layout
+            if (textLayersToProcess.size > 0) {
+                requestAnimationFrame(() => {
+                    textLayersToProcess.forEach(processTextLayer);
+                });
             }
         });
 
-        observer.observe(container, { childList: true, subtree: true });
+        observer.observe(container, {
+            childList: true,
+            subtree: true,
+            attributes: true,
+            attributeFilter: ["style"],
+        });
+
         return () => observer.disconnect();
     }, []);
 }
