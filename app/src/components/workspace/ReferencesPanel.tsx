@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useSettingsStore } from "@/stores/useSettingsStore";
 import { useWorkspaceStore } from "@/stores/useWorkspaceStore";
@@ -19,6 +19,19 @@ export function ReferencesPanel({ paper }: Props) {
   const [error, setError] = useState<string | null>(null);
 
   const references = paper.references as Reference[] | null | undefined;
+
+  // Local state for optimistic star updates
+  const [localRefs, setLocalRefs] = useState<Reference[]>(references ?? []);
+  // Sync when paper.references changes (e.g. after extraction)
+  useEffect(() => { setLocalRefs(references ?? []); }, [references]);
+
+  const toggleStar = async (idx: number) => {
+    const newRefs = localRefs.map((ref, i) =>
+      i === idx ? { ...ref, starred: !ref.starred } : ref
+    );
+    setLocalRefs(newRefs);
+    await updatePaper(paper.id, { references: newRefs } as any);
+  };
 
   // Find a matching paper in the library by title similarity
   const findInLibrary = (ref: Reference) => {
@@ -286,7 +299,7 @@ export function ReferencesPanel({ paper }: Props) {
         {/* References list */}
         {!extracting && references && references.length > 0 && (
           <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-            {references.map((ref, i) => {
+            {localRefs.map((ref, i) => {
               const match = findInLibrary(ref);
               return (
                 <div
@@ -295,7 +308,7 @@ export function ReferencesPanel({ paper }: Props) {
                     padding: "10px 12px",
                     borderRadius: "6px",
                     background: "var(--surface)",
-                    border: "1px solid var(--border)",
+                    border: ref.starred ? "1px solid var(--accent)" : "1px solid var(--border)",
                     display: "flex",
                     gap: "10px",
                   }}
@@ -356,6 +369,30 @@ export function ReferencesPanel({ paper }: Props) {
                       )}
                     </div>
                   </div>
+
+                  {/* Star button */}
+                  <button
+                    onClick={() => toggleStar(i)}
+                    title={ref.starred ? "Unstar" : "Mark as important"}
+                    style={{
+                      background: "none",
+                      border: "none",
+                      cursor: "pointer",
+                      padding: "2px",
+                      flexShrink: 0,
+                      alignSelf: "flex-start",
+                      color: ref.starred ? "#f59f00" : "var(--text-3)",
+                      transition: "color 0.15s",
+                    }}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24"
+                      fill={ref.starred ? "currentColor" : "none"}
+                      stroke="currentColor" strokeWidth="2"
+                      strokeLinecap="round" strokeLinejoin="round"
+                    >
+                      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                    </svg>
+                  </button>
                 </div>
               );
             })}

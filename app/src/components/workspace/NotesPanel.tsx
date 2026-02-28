@@ -4,10 +4,10 @@ import { useEffect, useState, useCallback } from "react";
 import { useWorkspaceStore } from "@/stores/useWorkspaceStore";
 
 const SECTIONS = [
-  { id: "introduction", title: "Introduction / Background" },
-  { id: "contribution", title: "Contribution" },
-  { id: "experiment", title: "Experiment Results" },
-  { id: "summary", title: "Summary" },
+  { id: "introduction", title: "Introduction / Background", icon: "📖" },
+  { id: "contribution", title: "Contribution", icon: "💡" },
+  { id: "experiment", title: "Experiment Results", icon: "🔬" },
+  { id: "summary", title: "Summary", icon: "📝" },
 ];
 
 function parseNoteToSections(rawText: string) {
@@ -139,27 +139,19 @@ export function NotesPanel() {
                 padding: "12px 16px",
                 display: "flex",
                 alignItems: "center",
-                justifyContent: "space-between",
+                gap: "10px",
                 cursor: "pointer",
                 background: isExpanded ? "var(--surface-2)" : "transparent",
                 borderBottom: isExpanded ? "1px solid var(--border)" : "none",
               }}
             >
-              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <span style={{ fontSize: "14px", fontWeight: 600, color: isExpanded ? "var(--accent)" : "var(--text-2)" }}>
-                  {sec.title}
-                </span>
-                {!isExpanded && hasContent && (
-                  <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: "var(--accent)" }} />
-                )}
-              </div>
-
-              <svg
-                width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-3)" strokeWidth="2"
-                style={{ transform: isExpanded ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s" }}
-              >
-                <polyline points="6 9 12 15 18 9"></polyline>
-              </svg>
+              <span style={{ fontSize: "16px", lineHeight: 1, flexShrink: 0 }}>{sec.icon}</span>
+              <span style={{ fontSize: "14px", fontWeight: 600, color: isExpanded ? "var(--accent)" : "var(--text-2)", flex: 1 }}>
+                {sec.title}
+              </span>
+              {!isExpanded && hasContent && (
+                <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: "var(--accent)", flexShrink: 0 }} />
+              )}
             </div>
 
             {/* Subtle content preview when collapsed */}

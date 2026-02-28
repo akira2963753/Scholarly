@@ -10,6 +10,7 @@ export interface Reference {
   title: string;
   venue: string;
   year: string;
+  starred?: boolean;
 }
 
 export interface Paper {
