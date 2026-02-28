@@ -70,19 +70,6 @@ export function PaperCard({ paper, index, viewMode = "grid" }: { paper: PaperDat
             </button>
             <span className="badge" style={{ background: "var(--surface-2)", color: "var(--text-2)", fontSize: "13px", border: "1px solid var(--border)" }}>{paper.year}</span>
             <div style={{ display: "flex", gap: "6px", alignItems: "center", flexShrink: 0, borderLeft: "1px solid var(--border)", paddingLeft: "12px" }}>
-              {/* Open Button */}
-              <Link
-                href={`/workspace/${paper.id}`}
-                className="btn btn-primary"
-                style={{ padding: "6px", borderRadius: "6px", width: "32px", height: "32px", display: "flex", alignItems: "center", justifyContent: "center" }}
-                title="Open Workspace"
-              >
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                  <circle cx="12" cy="12" r="3"></circle>
-                </svg>
-              </Link>
-
               {/* Edit Button */}
               <button
                 className="btn btn-ghost"
@@ -170,19 +157,6 @@ export function PaperCard({ paper, index, viewMode = "grid" }: { paper: PaperDat
 
         {/* Actions row */}
         <div style={{ display: "flex", gap: "8px", alignItems: "center", marginTop: "4px", flexWrap: "wrap", justifyContent: "flex-end" }}>
-
-          {/* Open Button */}
-          <Link
-            href={`/workspace/${paper.id}`}
-            className="btn btn-primary"
-            style={{ padding: "6px", borderRadius: "6px", width: "32px", height: "32px", display: "flex", alignItems: "center", justifyContent: "center" }}
-            title="Open Workspace"
-          >
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-              <circle cx="12" cy="12" r="3"></circle>
-            </svg>
-          </Link>
 
           {/* Edit Button */}
           <button
