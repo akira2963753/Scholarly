@@ -9,20 +9,20 @@ import { useWorkspaceStore } from "@/stores/useWorkspaceStore";
  * releasing or switching back to "select" mode restores normal behavior.
  */
 export function usePanMode() {
-    const pdfUtils = useWorkspaceStore((s) => s.pdfUtils);
     const mode = useWorkspaceStore((s) => s.pdfInteractionMode);
 
     const isDragging = useRef(false);
     const startX = useRef(0);
     const startY = useRef(0);
-    const scrollLeft = useRef(0);
-    const scrollTop = useRef(0);
+    const scrollLeftStart = useRef(0);
+    const scrollTopStart = useRef(0);
 
     useEffect(() => {
-        if (mode !== "pan" || !pdfUtils) return;
+        if (mode !== "pan") return;
 
-        const viewer = pdfUtils.getViewer();
-        const container = viewer?.container as HTMLElement | undefined;
+        // Find the scrollable .PdfHighlighter container directly from the DOM.
+        // This avoids depending on a potentially stale pdfUtils reference.
+        const container = document.querySelector(".PdfHighlighter") as HTMLElement | null;
         if (!container) return;
 
         container.style.cursor = "grab";
@@ -32,8 +32,8 @@ export function usePanMode() {
             isDragging.current = true;
             startX.current = e.clientX;
             startY.current = e.clientY;
-            scrollLeft.current = container.scrollLeft;
-            scrollTop.current = container.scrollTop;
+            scrollLeftStart.current = container.scrollLeft;
+            scrollTopStart.current = container.scrollTop;
             container.style.cursor = "grabbing";
             container.style.userSelect = "none";
             e.preventDefault(); // prevent text selection
@@ -43,8 +43,8 @@ export function usePanMode() {
             if (!isDragging.current) return;
             const dx = e.clientX - startX.current;
             const dy = e.clientY - startY.current;
-            container.scrollLeft = scrollLeft.current - dx;
-            container.scrollTop = scrollTop.current - dy;
+            container.scrollLeft = scrollLeftStart.current - dx;
+            container.scrollTop = scrollTopStart.current - dy;
         };
 
         const onMouseUp = () => {
@@ -67,5 +67,5 @@ export function usePanMode() {
             container.style.userSelect = "";
             isDragging.current = false;
         };
-    }, [mode, pdfUtils]);
+    }, [mode]);
 }
