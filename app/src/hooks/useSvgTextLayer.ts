@@ -44,12 +44,13 @@ export function useSvgTextLayer(pdfDocument: PDFDocumentProxy | null) {
     const container = document.querySelector(".PdfHighlighter");
     if (!container) return;
 
-    // Track which page elements already have an SVG overlay
-    const processedPages = new WeakSet<Element>();
+    // Track the canvas.width at the time each page's SVG was last built.
+    // Using width (not a boolean) lets us detect when PDF.js re-renders a page
+    // at a different scale (e.g. when a side panel opens/closes and the viewer
+    // resizes), so the SVG overlay is rebuilt to match the new dimensions.
+    const processedPages = new WeakMap<Element, number>();
 
     const buildSvgForPage = async (pageEl: HTMLElement) => {
-      if (processedPages.has(pageEl)) return;
-
       const textLayerEl = pageEl.querySelector<HTMLElement>(".textLayer");
       if (!textLayerEl) return;
 
@@ -59,11 +60,15 @@ export function useSvgTextLayer(pdfDocument: PDFDocumentProxy | null) {
       const canvas = pageEl.querySelector<HTMLCanvasElement>("canvas");
       if (!canvas || canvas.width === 0) return;
 
+      // Skip if already built for this exact canvas width (prevents redundant
+      // rebuilds on unrelated DOM mutations while still catching resizes).
+      if (processedPages.get(pageEl) === canvas.width) return;
+
       const pageNum = parseInt(pageEl.dataset.pageNumber ?? "0", 10);
       if (!pageNum) return;
 
-      // Mark immediately to prevent concurrent calls for the same page
-      processedPages.add(pageEl);
+      // Mark immediately (with current width) to prevent concurrent builds
+      processedPages.set(pageEl, canvas.width);
 
       try {
         const page = await pdfDocument.getPage(pageNum);
@@ -131,7 +136,7 @@ export function useSvgTextLayer(pdfDocument: PDFDocumentProxy | null) {
         pageEl.appendChild(svg);
       } catch (err) {
         console.warn("[useSvgTextLayer] Page", pageNum, "failed:", err);
-        // Allow retry on next mutation
+        // Allow retry on next mutation by clearing the cached width
         processedPages.delete(pageEl);
       }
     };
