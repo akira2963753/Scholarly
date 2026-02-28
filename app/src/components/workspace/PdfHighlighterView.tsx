@@ -98,8 +98,9 @@ export const PdfHighlighterView = memo(function PdfHighlighterView({ pdfDocument
     }, [paperId]);
 
     // Sync utils into Zustand store after the render cycle completes (safe timing).
+    // Only update when the reference actually changes to avoid infinite re-render loops.
     useEffect(() => {
-        if (utilsRef.current) {
+        if (utilsRef.current && utilsRef.current !== useWorkspaceStore.getState().pdfUtils) {
             setPdfUtils(utilsRef.current);
         }
     });
