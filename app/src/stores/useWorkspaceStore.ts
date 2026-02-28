@@ -19,6 +19,9 @@ interface WorkspaceStore {
   /** Stored reference to PdfHighlighter utilities (for bidirectional anchor) */
   pdfUtils: PdfHighlighterUtils | null;
 
+  /** Current PDF interaction mode: "select" for text selection, "pan" for drag-to-scroll */
+  pdfInteractionMode: "select" | "pan";
+
   /** Map of highlightId → NoteCard DOM element (for reverse anchor: PDF → note) */
   noteCardRefs: Map<string, HTMLElement>;
 
@@ -33,6 +36,7 @@ interface WorkspaceStore {
   initWorkspace: (paperId: string, highlights: PaperHighlight[], notes: PaperNote[]) => void;
   setAnnotations: (highlights: PaperHighlight[], notes: PaperNote[]) => void;
   setPdfUtils: (utils: PdfHighlighterUtils) => void;
+  setPdfInteractionMode: (mode: "select" | "pan") => void;
   setChatMessages: (msgs: ChatMessage[]) => void;
   setPaperFileUri: (uri: string | null) => void;
   setAiContextLoadedVisible: (visible: boolean) => void;
@@ -60,6 +64,7 @@ export const useWorkspaceStore = create<WorkspaceStore>()((set, get) => ({
   highlights: [],
   notes: [],
   pdfUtils: null,
+  pdfInteractionMode: "select",
   noteCardRefs: new Map(),
   chatMessages: [],
   paperFileUri: null,
@@ -71,6 +76,7 @@ export const useWorkspaceStore = create<WorkspaceStore>()((set, get) => ({
   setAnnotations: (highlights, notes) => set({ highlights, notes }),
 
   setPdfUtils: (utils) => set({ pdfUtils: utils }),
+  setPdfInteractionMode: (mode) => set({ pdfInteractionMode: mode }),
   setChatMessages: (msgs) => set({ chatMessages: msgs }),
   setPaperFileUri: (uri) => set({ paperFileUri: uri }),
   setAiContextLoadedVisible: (visible) => set({ aiContextLoadedVisible: visible }),

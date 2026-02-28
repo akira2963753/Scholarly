@@ -7,6 +7,7 @@ import {
     type PdfHighlighterUtils,
 } from "react-pdf-highlighter-extended";
 import { useWorkspaceStore } from "@/stores/useWorkspaceStore";
+import { usePanMode } from "@/hooks/usePanMode";
 
 interface Props {
     pdfDocument: PDFDocumentProxy;
@@ -45,6 +46,9 @@ interface Props {
  */
 export const PdfHighlighterView = memo(function PdfHighlighterView({ pdfDocument, paperId }: Props) {
     const setPdfUtils = useWorkspaceStore((s) => s.setPdfUtils);
+    const pdfInteractionMode = useWorkspaceStore((s) => s.pdfInteractionMode);
+
+    usePanMode();
 
     // Holds the PdfHighlighterUtils — never written during render (no setState).
     const utilsRef = useRef<PdfHighlighterUtils | null>(null);
@@ -128,6 +132,7 @@ export const PdfHighlighterView = memo(function PdfHighlighterView({ pdfDocument
     return (
         <div
             style={{ height: "100%" }}
+            className={pdfInteractionMode === "pan" ? "pdf-pan-mode" : undefined}
             onPointerDownCapture={(e) => {
                 // Prevent PdfHighlighter from clearing text selection when user right-clicks to copy
                 if (e.button === 2) {

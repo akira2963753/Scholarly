@@ -333,6 +333,26 @@ body {
   pointer-events: auto !important;
 }
 
+/* Pan mode — disable text selection, show grab cursor */
+.pdf-pan-mode .textLayer {
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  pointer-events: none !important;
+}
+
+.pdf-pan-mode .textLayer span {
+  user-select: none !important;
+  -webkit-user-select: none !important;
+}
+
+.pdf-pan-mode .PdfHighlighter {
+  cursor: grab;
+}
+
+.pdf-pan-mode .PdfHighlighter:active {
+  cursor: grabbing;
+}
+
 /* Allotment split-pane — thin draggable sash, no visible track */
 .workspace-split {
   --sash-size: 4px;

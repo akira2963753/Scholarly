@@ -17,9 +17,26 @@ function snapToStep(scale: number, direction: "up" | "down"): number {
 
 export function PdfZoomToolbar({ paperId }: { paperId: string }) {
     const pdfUtils = useWorkspaceStore((s) => s.pdfUtils);
+    const pdfInteractionMode = useWorkspaceStore((s) => s.pdfInteractionMode);
+    const setPdfInteractionMode = useWorkspaceStore((s) => s.setPdfInteractionMode);
     const [scale, setScale] = useState<number | null>(null);
 
-    // Restore saved scale on mount
+    const toggleMode = () => {
+        const next = pdfInteractionMode === "select" ? "pan" : "select";
+        setPdfInteractionMode(next);
+        localStorage.setItem("pdf_interaction_mode", next);
+    };
+
+    // Restore saved scale and interaction mode on mount
+    useEffect(() => {
+        try {
+            const savedMode = localStorage.getItem("pdf_interaction_mode");
+            if (savedMode === "pan" || savedMode === "select") {
+                setPdfInteractionMode(savedMode);
+            }
+        } catch { }
+    }, [setPdfInteractionMode]);
+
     useEffect(() => {
         if (!pdfUtils) return;
         const viewer = pdfUtils.getViewer();
@@ -122,6 +139,43 @@ export function PdfZoomToolbar({ paperId }: { paperId: string }) {
                 userSelect: "none",
             }}
         >
+            {/* Mode Toggle */}
+            <button
+                onClick={toggleMode}
+                title={pdfInteractionMode === "select" ? "Switch to pan mode (hand tool)" : "Switch to select mode (text selection)"}
+                style={{
+                    width: "28px",
+                    height: "28px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    background: pdfInteractionMode === "pan" ? "var(--surface-3)" : "transparent",
+                    border: "none",
+                    borderRadius: "var(--radius-sm)",
+                    cursor: "pointer",
+                    color: "var(--text-1)",
+                    transition: "background 0.12s, color 0.12s",
+                    padding: 0,
+                }}
+                onMouseEnter={(e) => { if (pdfInteractionMode !== "pan") e.currentTarget.style.background = "var(--surface-3)"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = pdfInteractionMode === "pan" ? "var(--surface-3)" : "transparent"; }}
+            >
+                {pdfInteractionMode === "pan" ? (
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M18 11V6a2 2 0 0 0-4 0v4M14 10V4a2 2 0 0 0-4 0v7M10 10.5V6a2 2 0 0 0-4 0v8" />
+                        <path d="M18 11a2 2 0 0 1 4 0v5a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.9-5.7-2.4L3.7 18a2 2 0 0 1 3-2.6L8 17" />
+                    </svg>
+                ) : (
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z" />
+                        <path d="M13 13l6 6" />
+                    </svg>
+                )}
+            </button>
+
+            {/* Divider */}
+            <div style={{ width: "1px", height: "16px", background: "var(--border)", margin: "0 2px" }} />
+
             {/* Zoom Out */}
             <ZoomBtn onClick={zoomOut} disabled={atMin} title="Zoom out (−)">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
