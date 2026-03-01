@@ -9,6 +9,10 @@ import {
 import { useWorkspaceStore } from "@/stores/useWorkspaceStore";
 import { usePanMode } from "@/hooks/usePanMode";
 import { useSvgTextLayer } from "@/hooks/useSvgTextLayer";
+import { useSvgHighlightSelection } from "@/hooks/useSvgHighlightSelection";
+import { HighlightSelectionMenu } from "./HighlightSelectionMenu";
+import { HighlightContainer } from "./HighlightContainer";
+import type { HighlightColor } from "@/types/highlight";
 
 interface Props {
     pdfDocument: PDFDocumentProxy;
@@ -48,9 +52,14 @@ interface Props {
 export const PdfHighlighterView = memo(function PdfHighlighterView({ pdfDocument, paperId }: Props) {
     const setPdfUtils = useWorkspaceStore((s) => s.setPdfUtils);
     const pdfInteractionMode = useWorkspaceStore((s) => s.pdfInteractionMode);
+    const highlights = useWorkspaceStore((s) => s.highlights);
+    const addHighlight = useWorkspaceStore((s) => s.addHighlight);
+    const storePaperId = useWorkspaceStore((s) => s.paperId);
 
     usePanMode();
     useSvgTextLayer(pdfDocument);
+
+    const { selection, clearSelection } = useSvgHighlightSelection();
 
     // Holds the PdfHighlighterUtils — never written during render (no setState).
     const utilsRef = useRef<PdfHighlighterUtils | null>(null);
@@ -65,6 +74,21 @@ export const PdfHighlighterView = memo(function PdfHighlighterView({ pdfDocument
     // "Cannot update a component while rendering a different component".
     const handleUtilsRef = (utils: PdfHighlighterUtils) => {
         utilsRef.current = utils;
+    };
+
+    const handleSaveHighlight = (color: HighlightColor) => {
+        if (!selection || !storePaperId) return;
+        addHighlight({
+            id: crypto.randomUUID(),
+            type: "text",
+            content: { text: selection.text },
+            position: selection.position,
+            color,
+            selectedText: selection.text,
+            paperId: storePaperId,
+            createdAt: new Date().toISOString(),
+        });
+        clearSelection();
     };
 
     // Load initial scroll from localStorage on mount
@@ -118,9 +142,9 @@ export const PdfHighlighterView = memo(function PdfHighlighterView({ pdfDocument
     // capture the current scrollTop there. After PdfHighlighter's effect has
     // reset the scroll, our effect body runs and restores it.
     //
-    // Deps include pdfInteractionMode so that switching pan/select mode also
-    // saves & restores scroll (the className change triggers PdfHighlighter's
-    // ResizeObserver which resets scroll).
+    // Deps include pdfInteractionMode and highlights so that switching pan/select
+    // mode OR adding a highlight (both trigger PdfHighlighter's ResizeObserver
+    // which resets scroll) also save & restore scroll correctly.
     useLayoutEffect(() => {
         // Step 3: restore the saved position (this runs after PdfHighlighter's effect)
         const viewer = utilsRef.current?.getViewer();
@@ -137,7 +161,7 @@ export const PdfHighlighterView = memo(function PdfHighlighterView({ pdfDocument
                 savedScrollTop.current = container.scrollTop;
             }
         };
-    }, [pdfInteractionMode]);
+    }, [pdfInteractionMode, highlights]);
 
     return (
         <div
@@ -150,15 +174,18 @@ export const PdfHighlighterView = memo(function PdfHighlighterView({ pdfDocument
                 }
             }}
         >
+            {selection && (
+                <HighlightSelectionMenu selection={selection} onColor={handleSaveHighlight} />
+            )}
             <PdfHighlighter
                 pdfDocument={pdfDocument}
-                highlights={[]}
+                highlights={highlights}
                 utilsRef={handleUtilsRef}
                 pdfScaleValue="page-width"
                 style={{ height: "100%", background: "var(--surface-2)" }}
                 textSelectionColor="rgba(47, 109, 224, 0.15)"
             >
-                {null}
+                <HighlightContainer />
             </PdfHighlighter>
         </div>
     );

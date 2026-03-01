@@ -10,16 +10,16 @@ import { HighlightEditMenu } from "./HighlightEditMenu";
 import type { PaperHighlight, HighlightColor } from "@/types/highlight";
 
 const COLOR_MAP: Record<HighlightColor, string> = {
-  yellow: "rgba(235, 219, 164, 0.5)",
-  red: "rgba(235, 161, 136, 0.5)",
-  blue: "rgba(192, 215, 235, 0.5)",
+  yellow: "rgba(250, 220, 153, 0.55)",
+  red: "rgba(250, 195, 195, 0.55)",
+  blue: "rgba(195, 209, 250, 0.55)",
   green: "rgba(235, 234, 191, 0.5)",
 };
 
 const BORDER_MAP: Record<HighlightColor, string> = {
-  yellow: "#EBDBA4",
-  red: "#EBA188",
-  blue: "#C0D7EB",
+  yellow: "#FADC99",
+  red: "#FAC3C3",
+  blue: "#C3D1FA",
   green: "#EBEABF",
 };
 
